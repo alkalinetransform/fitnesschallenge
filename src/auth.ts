@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import type { Role } from "@prisma/client";
+import { authConfig } from "@/auth.config";
 
 declare module "next-auth" {
   interface Session {
@@ -27,11 +28,7 @@ declare module "next-auth" {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  trustHost: true,
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -64,6 +61,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
@@ -84,26 +82,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
       return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        const user = session.user as {
-          id: string;
-          email?: string | null;
-          name?: string | null;
-          image?: string | null;
-          role: Role;
-          gymId: string | null;
-          emailVerified: boolean;
-          isFrozen: boolean;
-        };
-        user.id = token.id as string;
-        user.role = token.role as Role;
-        user.gymId = (token.gymId as string | null) ?? null;
-        user.emailVerified = Boolean(token.emailVerified);
-        user.isFrozen = Boolean(token.isFrozen);
-      }
-      return session;
     },
   },
 });
