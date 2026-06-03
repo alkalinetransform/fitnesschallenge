@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Gym" ADD COLUMN "challengeEnded" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Gym" ADD COLUMN "endedAt" TIMESTAMP(3);

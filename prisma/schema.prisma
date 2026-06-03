@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  PLAYER
+}
+
+enum GymStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  passwordHash       String
+  name               String
+  role               Role
+  gymId              String?
+  gym                Gym?      @relation("GymPlayers", fields: [gymId], references: [id])
+  ownedGym           Gym?      @relation("GymAdmin")
+  emailVerified      Boolean   @default(false)
+  emailVerifyToken   String?   @unique
+  emailVerifyExpires DateTime?
+  isFrozen           Boolean   @default(false)
+  completions        Completion[]
+  teamMembers        TeamMember[]
+  createdAt          DateTime  @default(now())
+}
+
+model InviteCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  maxUses   Int       @default(10)
+  usedCount Int       @default(0)
+  expiresAt DateTime?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+}
+
+model Gym {
+  id              String      @id @default(cuid())
+  name            String
+  slug            String      @unique
+  location        String
+  adminId         String      @unique
+  admin           User        @relation("GymAdmin", fields: [adminId], references: [id])
+  status          GymStatus   @default(PENDING)
+  activeWeek      Int         @default(1)
+  seasonStartDate DateTime    @default(now())
+  challengeEnded  Boolean     @default(false)
+  endedAt         DateTime?
+  players         User[]      @relation("GymPlayers")
+  challenges      Challenge[]
+  teams           Team[]
+  createdAt       DateTime    @default(now())
+}
+
+model Challenge {
+  id            String       @id @default(cuid())
+  gymId         String
+  gym           Gym          @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  weekNumber    Int
+  name          String
+  description   String
+  points        Int
+  startDate     DateTime     @default(now())
+  durationWeeks Int          @default(1)
+  expiresAt     DateTime
+  completions   Completion[]
+  createdAt     DateTime     @default(now())
+
+  @@index([gymId, weekNumber])
+  @@index([gymId, expiresAt])
+}
+
+model Team {
+  id      String       @id @default(cuid())
+  gymId   String
+  gym     Gym          @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  name    String
+  members TeamMember[]
+}
+
+model TeamMember {
+  teamId String
+  userId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, userId])
+}
+
+model Completion {
+  userId      String
+  challengeId String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  completedAt DateTime  @default(now())
+
+  @@id([userId, challengeId])
+}
