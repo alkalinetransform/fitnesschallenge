@@ -22,7 +22,7 @@ export default async function RegisterPage() {
 
   return (
     <AuthShell title="Join the challenge" subtitle={`Squeeze the day · ${gym.name}`}>
-      <PlayerRegisterForm gym={{ id: gym.id, name: gym.name, location: gym.location }} />
+      <PlayerRegisterForm gym={{ id: gym.id, name: gym.name }} />
       <p className="mt-6 text-center text-sm text-slate-400">
         Already have an account?{" "}
         <Link href="/login" className="font-semibold text-brand-400 hover:text-brand-300">

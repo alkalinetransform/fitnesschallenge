@@ -9,7 +9,7 @@ import { createVerifyToken, sendVerificationEmail } from "@/lib/email";
 import { slugify } from "@/lib/slug";
 
 const playerSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(2, "Full name is required"),
   email: z.string().email("Invalid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   gymId: z.string().min(1, "Select a gym location"),
@@ -77,7 +77,7 @@ export async function registerPlayer(formData: FormData) {
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/dashboard",
+      redirectTo: "/dashboard?welcome=1",
     });
   } catch {
     return { error: "Account created but sign-in failed" };
@@ -223,11 +223,24 @@ export async function loginUser(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      isFrozen: true,
+      welcomeSeenAt: true,
+      emailVerified: true,
+    },
+  });
   if (!user) return { error: "Invalid email or password" };
   if (user.isFrozen) return { error: "Your account has been deactivated. Contact your gym admin." };
 
-  let redirectTo = "/dashboard";
+  let redirectTo =
+    user.role === "PLAYER" && !user.welcomeSeenAt
+      ? "/dashboard?welcome=1"
+      : "/dashboard";
   if (user.role === "ADMIN") {
     if (!user.emailVerified) {
       redirectTo = "/admin/pending?reason=email";

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toggleCompletion } from "@/actions/completions";
+import { ConfettiCelebration } from "@/components/confetti-celebration";
 import { cn } from "@/lib/utils";
 
 export function ChallengeCheckbox({
@@ -17,6 +18,7 @@ export function ChallengeCheckbox({
 }) {
   const [pending, startTransition] = useTransition();
   const [checked, setChecked] = useState(defaultChecked);
+  const [celebrate, setCelebrate] = useState(false);
   const isDisabled = disabled || pending;
 
   function handleClick() {
@@ -30,13 +32,19 @@ export function ChallengeCheckbox({
     if (!window.confirm(message)) return;
 
     setChecked(next);
+    if (next) setCelebrate(true);
     startTransition(async () => {
       const result = await toggleCompletion(challengeId, next);
-      if (result?.error) setChecked(!next);
+      if (result?.error) {
+        setChecked(!next);
+        setCelebrate(false);
+      }
     });
   }
 
   return (
+    <>
+    <ConfettiCelebration active={celebrate} />
     <button
       type="button"
       role="checkbox"
@@ -65,5 +73,6 @@ export function ChallengeCheckbox({
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
       </svg>
     </button>
+    </>
   );
 }

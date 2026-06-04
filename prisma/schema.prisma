@@ -18,22 +18,44 @@ enum GymStatus {
   REJECTED
 }
 
+enum GymEndPhase {
+  NONE
+  AWAITING_METRICS
+  RESULTS_RELEASED
+}
+
 model User {
-  id                 String    @id @default(cuid())
-  email              String    @unique
-  passwordHash       String
-  name               String
-  role               Role
-  gymId              String?
-  gym                Gym?      @relation("GymPlayers", fields: [gymId], references: [id])
-  ownedGym           Gym?      @relation("GymAdmin")
-  emailVerified      Boolean   @default(false)
-  emailVerifyToken   String?   @unique
-  emailVerifyExpires DateTime?
-  isFrozen           Boolean   @default(false)
-  completions        Completion[]
-  teamMembers        TeamMember[]
-  createdAt          DateTime  @default(now())
+  id                      String    @id @default(cuid())
+  email                   String    @unique
+  passwordHash            String
+  name                    String
+  role                    Role
+  gymId                   String?
+  gym                     Gym?      @relation("GymPlayers", fields: [gymId], references: [id])
+  ownedGym                Gym?      @relation("GymAdmin")
+  emailVerified           Boolean   @default(false)
+  emailVerifyToken        String?   @unique
+  emailVerifyExpires      DateTime?
+  isFrozen                Boolean   @default(false)
+  welcomeSeenAt           DateTime?
+  profileSetupComplete    Boolean   @default(false)
+  stepsPerDay             Int?
+  waterOzPerDay           Int?
+  startSkeletalMuscleMass Float?
+  startWeightLbs          Float?
+  startBodyFatPercent     Float?
+  endSkeletalMuscleMass   Float?
+  endWeightLbs            Float?
+  endBodyFatPercent       Float?
+  endBoneMass             Float?
+  endMuscleMass           Float?
+  endMetricsSentAt        DateTime?
+  resultsWrapSeenAt       DateTime?
+  completions             Completion[]
+  teamMembers             TeamMember[]
+  messageDismissals       MessageDismissal[]
+  endMetricsDrafts        PlayerEndMetricsDraft[]
+  createdAt               DateTime  @default(now())
 }
 
 model InviteCode {
@@ -47,21 +69,72 @@ model InviteCode {
 }
 
 model Gym {
-  id              String      @id @default(cuid())
+  id              String              @id @default(cuid())
   name            String
-  slug            String      @unique
+  slug            String              @unique
   location        String
-  adminId         String      @unique
-  admin           User        @relation("GymAdmin", fields: [adminId], references: [id])
-  status          GymStatus   @default(PENDING)
-  activeWeek      Int         @default(1)
-  seasonStartDate DateTime    @default(now())
-  challengeEnded  Boolean     @default(false)
+  adminId         String              @unique
+  admin           User                @relation("GymAdmin", fields: [adminId], references: [id])
+  status          GymStatus           @default(PENDING)
+  activeWeek      Int                 @default(1)
+  seasonStartDate DateTime            @default(now())
+  competitionName String              @default("Transformation Challenge")
+  challengeEnded  Boolean             @default(false)
   endedAt         DateTime?
-  players         User[]      @relation("GymPlayers")
+  endPhase        GymEndPhase         @default(NONE)
+  players         User[]              @relation("GymPlayers")
   challenges      Challenge[]
   teams           Team[]
-  createdAt       DateTime    @default(now())
+  messages        BroadcastMessage[]
+  archives        CompetitionArchive[]
+  endMetricsDrafts PlayerEndMetricsDraft[]
+  createdAt       DateTime            @default(now())
+}
+
+model BroadcastMessage {
+  id          String             @id @default(cuid())
+  gymId       String
+  gym         Gym                @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  body        String
+  sendToEmail Boolean            @default(false)
+  sendToInApp Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  dismissals  MessageDismissal[]
+}
+
+model MessageDismissal {
+  userId      String
+  messageId   String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message     BroadcastMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  dismissedAt DateTime         @default(now())
+
+  @@id([userId, messageId])
+}
+
+model CompetitionArchive {
+  id           String   @id @default(cuid())
+  gymId        String
+  gym          Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  name         String
+  endedAt      DateTime
+  snapshotJson String
+  createdAt    DateTime @default(now())
+}
+
+model PlayerEndMetricsDraft {
+  userId              String
+  gymId               String
+  user                User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gym                 Gym    @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  skeletalMuscleMass  Float?
+  weightLbs           Float?
+  bodyFatPercent      Float?
+  boneMass            Float?
+  muscleMass          Float?
+  updatedAt           DateTime @updatedAt
+
+  @@id([userId, gymId])
 }
 
 model Challenge {

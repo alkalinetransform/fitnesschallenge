@@ -5,6 +5,7 @@ import { loginUser } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
@@ -23,11 +24,11 @@ export function LoginForm() {
     >
       <div>
         <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" required />
+        <Input id="email" name="email" type="email" required autoComplete="email" />
       </div>
       <div>
         <Label htmlFor="password">Password</Label>
-        <Input id="password" name="password" type="password" required />
+        <PasswordInput id="password" name="password" required />
       </div>
       {error && <p className="text-sm text-red-400">{error}</p>}
       <Button type="submit" className="w-full" size="lg" loading={pending}>

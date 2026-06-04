@@ -88,15 +88,23 @@ A simple web app for gym locations to run weekly fitness challenges with teams a
    - `DATABASE_URL` — Neon pooled connection string
    - `AUTH_SECRET` — random secret
    - `AUTH_URL` / `NEXTAUTH_URL` — your production URL (e.g. `https://your-app.vercel.app`)
-4. Build command runs `prisma generate` via `postinstall`. Add a build step or use:
+5. **Set up production database** (run once from your PC against Neon):
+
+   ```powershell
+   $env:DATABASE_URL = "your-neon-connection-string"
+   npm run db:production-setup
+   ```
+
+   This runs `db push` (works when `migrate deploy` fails with **P3005** — schema not empty), marks migrations as applied, and seeds demo users.
+
+   If you prefer a clean empty DB, reset the branch in Neon, then:
 
    ```bash
    npx prisma migrate deploy
+   npm run db:seed
    ```
 
-   in Vercel’s build command or as a post-deploy hook.
-
-5. Deploy and run migrations against production once.
+6. Redeploy on Vercel if you changed environment variables.
 
 ## Routes
 

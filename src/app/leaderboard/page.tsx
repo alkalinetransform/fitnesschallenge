@@ -4,7 +4,6 @@ import { prisma } from "@/lib/db";
 import { getTeamScoresTotal } from "@/lib/scores";
 import { maintainGym } from "@/lib/gym-maintenance";
 import { getSiteGym } from "@/lib/site-gym";
-import { Nav } from "@/components/nav";
 import { AllTeamsLeaderboard, TeamPodium, TeamRosterGrid } from "@/components/leaderboard-podium";
 import { CompetitionStatusBanner } from "@/components/competition-status-banner";
 
@@ -15,7 +14,6 @@ export default async function LeaderboardPage() {
   if (!session?.user) redirect("/login");
 
   let gymId: string;
-  let homeHref: string;
 
   if (session.user.role === "ADMIN") {
     const owned = await prisma.gym.findUnique({
@@ -24,11 +22,9 @@ export default async function LeaderboardPage() {
     const gym = owned ?? (await getSiteGym());
     if (!gym) redirect("/login");
     gymId = gym.id;
-    homeHref = "/admin";
   } else {
     if (!session.user.gymId) redirect("/register");
     gymId = session.user.gymId;
-    homeHref = "/dashboard";
   }
 
   await maintainGym(gymId);
@@ -43,9 +39,7 @@ export default async function LeaderboardPage() {
     : "Total points across all challenges in this competition";
 
   return (
-    <>
-      <Nav role={session.user.role} homeHref={homeHref} />
-      <main className="mx-auto max-w-4xl space-y-6 px-4 py-6 animate-fade-in">
+    <main className="space-y-6">
         <div>
           <p className="text-xs uppercase tracking-widest text-brand-400">Squeeze the day</p>
           <h1 className="font-display text-2xl font-bold text-white">Leaderboard</h1>
@@ -70,6 +64,5 @@ export default async function LeaderboardPage() {
           </div>
         )}
       </main>
-    </>
   );
 }

@@ -1,14 +1,12 @@
 import { requireApprovedAdminGym } from "@/lib/session";
 import { prisma } from "@/lib/db";
-import { TeamGenerator } from "@/components/team-generator";
 import { TeamEditor } from "@/components/team-editor";
+import { UnassignedPlayersPanel } from "@/components/unassigned-players-panel";
+import { AdminTabEndedOverlay } from "@/components/admin-tab-ended-overlay";
 
 export default async function AdminTeamsPage() {
   const { gym } = await requireApprovedAdminGym();
-
-  const playerCount = await prisma.user.count({
-    where: { gymId: gym.id, role: "PLAYER", isFrozen: false },
-  });
+  const ended = gym.challengeEnded;
 
   const teams = await prisma.team.findMany({
     where: { gymId: gym.id },
@@ -22,13 +20,23 @@ export default async function AdminTeamsPage() {
 
   const allPlayers = await prisma.user.findMany({
     where: { gymId: gym.id, role: "PLAYER", isFrozen: false },
-    select: { id: true, name: true, teamMembers: { select: { teamId: true } } },
+    select: { id: true, name: true, createdAt: true, teamMembers: { select: { teamId: true } } },
   });
 
   const assignedIds = new Set(teams.flatMap((t) => t.members.map((m) => m.userId)));
-  const unassigned = allPlayers
-    .filter((p) => !assignedIds.has(p.id))
-    .map((p) => ({ id: p.id, name: p.name, teamId: null }));
+  const unassigned = allPlayers.filter((p) => !assignedIds.has(p.id));
+
+  const unassignedForPanel = unassigned.map((p) => ({
+    id: p.id,
+    name: p.name,
+    createdAt: p.createdAt,
+  }));
+
+  const unassignedEditor = unassigned.map((p) => ({
+    id: p.id,
+    name: p.name,
+    teamId: null as string | null,
+  }));
 
   const teamData = teams.map((t) => ({
     id: t.id,
@@ -38,21 +46,22 @@ export default async function AdminTeamsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {ended && <AdminTabEndedOverlay />}
+      <div className={ended ? "pointer-events-none space-y-6 opacity-40" : "space-y-6"}>
       <div>
         <h1 className="font-display text-2xl font-bold text-white">Teams</h1>
-        <p className="text-sm text-slate-400">Orange roster panels · scroll to browse players</p>
+        <p className="text-sm text-slate-400">Rosters · generate teams when starting a new competition</p>
       </div>
 
-      {!gym.challengeEnded && <TeamGenerator playerCount={playerCount} />}
+      <UnassignedPlayersPanel players={unassignedForPanel} />
 
       {teams.length > 0 && (
         <div>
-          <h2 className="mb-3 font-display text-lg font-semibold text-white">
-            Edit teams manually
-          </h2>
-          <TeamEditor teams={teamData} unassigned={unassigned} />
+          <h2 className="mb-3 font-display text-lg font-semibold text-white">Edit teams</h2>
+          <TeamEditor teams={teamData} unassigned={unassignedEditor} />
         </div>
       )}
+      </div>
     </div>
   );
 }

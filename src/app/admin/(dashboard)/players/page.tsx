@@ -1,52 +1,44 @@
-import { setPlayerFrozenForm } from "@/actions/players";
 import { requireApprovedAdminGym } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { getPlayerScoresTotal } from "@/lib/scores";
-import { Button } from "@/components/ui/button";
-import { Card, CardTitle } from "@/components/ui/card";
+import { isNewPlayer } from "@/lib/player-utils";
+import { AdminPlayersGrid, type AdminPlayerRow } from "@/components/admin-players-grid";
+import { AdminTabEndedOverlay } from "@/components/admin-tab-ended-overlay";
 
 export default async function AdminPlayersPage() {
   const { gym } = await requireApprovedAdminGym();
+  const ended = gym.challengeEnded;
 
   const players = await prisma.user.findMany({
     where: { gymId: gym.id, role: "PLAYER" },
+    include: {
+      teamMembers: { include: { team: { select: { name: true } } } },
+    },
     orderBy: { name: "asc" },
   });
 
   const scores = await getPlayerScoresTotal(gym.id);
   const scoreMap = new Map(scores.map((s) => [s.userId, s.points]));
 
+  const rows: AdminPlayerRow[] = players.map((p) => ({
+    id: p.id,
+    name: p.name,
+    email: p.email,
+    isFrozen: p.isFrozen,
+    isNew: isNewPlayer(p.createdAt),
+    teamName: p.teamMembers[0]?.team.name ?? null,
+    points: scoreMap.get(p.id) ?? 0,
+  }));
+
   return (
     <div className="space-y-6 animate-fade-in">
+      {ended && <AdminTabEndedOverlay />}
+      <div className={ended ? "pointer-events-none space-y-6 opacity-40" : "space-y-6"}>
       <div>
         <h1 className="font-display text-2xl font-bold text-white">Players</h1>
-        <p className="text-sm text-slate-400">Manage rosters for the active competition</p>
+        <p className="text-sm text-slate-400">2×4 grid · search · freeze or delete accounts</p>
       </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        {players.map((p, i) => (
-          <Card key={p.id} className={`animate-fade-in-up stagger-${Math.min(i + 1, 6)} ${p.isFrozen ? "opacity-60" : ""}`}>
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <CardTitle className="text-base">{p.name}</CardTitle>
-                <p className="text-xs text-slate-500">{p.email}</p>
-              </div>
-              <span className="font-bold text-brand-400">{scoreMap.get(p.id) ?? 0} pts</span>
-            </div>
-            <form action={setPlayerFrozenForm} className="mt-3">
-              <input type="hidden" name="userId" value={p.id} />
-              <input type="hidden" name="frozen" value={p.isFrozen ? "false" : "true"} />
-              <Button
-                type="submit"
-                variant={p.isFrozen ? "secondary" : "destructive"}
-                size="md"
-                className="w-full"
-              >
-                {p.isFrozen ? "Reactivate account" : "Freeze account"}
-              </Button>
-            </form>
-          </Card>
-        ))}
+      <AdminPlayersGrid players={rows} />
       </div>
     </div>
   );

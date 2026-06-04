@@ -16,12 +16,13 @@ export function WeekControl({ defaultWeek }: { defaultWeek: number }) {
           await setActiveWeek(fd);
         });
       }}
-      className="tile-orange flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-end"
+      className="flex flex-wrap items-end gap-3 rounded-xl border border-white/10 bg-slate-900/40 p-3"
     >
-      <div className="flex-1">
-        <Label htmlFor="activeWeek" className="text-brand-200/90">
-          Competition week
+      <div className="min-w-0 flex-1">
+        <Label htmlFor="activeWeek" className="text-sm text-slate-400">
+          Find a week
         </Label>
+        <p className="text-[11px] text-slate-600">Usually updates automatically from the calendar.</p>
         <Input
           id="activeWeek"
           name="activeWeek"
@@ -29,11 +30,11 @@ export function WeekControl({ defaultWeek }: { defaultWeek: number }) {
           min={1}
           max={52}
           defaultValue={defaultWeek}
-          className="mt-1 w-full border-brand-500/20 bg-slate-950/40 py-3 text-center text-xl font-bold"
+          className="mt-1 w-24 border-white/10 bg-slate-950/50 text-center text-base"
         />
       </div>
-      <Button type="submit" variant="default" size="lg" loading={pending} className="w-full sm:min-w-[140px]">
-        Set week
+      <Button type="submit" variant="outline" size="md" loading={pending}>
+        Apply
       </Button>
     </form>
   );
