@@ -4,8 +4,18 @@ import { EnvelopedTabs, type EnvelopedTab } from "@/components/enveloped-tabs";
 
 export function PlayerSubNav({ resultsReady }: { resultsReady?: boolean }) {
   const tabs: EnvelopedTab[] = [
-    { href: "/dashboard", label: "Challenges", match: (p) => p === "/dashboard" },
-    { href: "/leaderboard", label: "Leaderboard", match: (p) => p.startsWith("/leaderboard") },
+    {
+      href: "/dashboard",
+      label: "Challenges",
+      shortLabel: "Tasks",
+      match: (p) => p === "/dashboard",
+    },
+    {
+      href: "/leaderboard",
+      label: "Leaderboard",
+      shortLabel: "Ranks",
+      match: (p) => p.startsWith("/leaderboard"),
+    },
     {
       href: "/dashboard/me",
       label: "Me",

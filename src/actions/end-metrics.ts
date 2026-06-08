@@ -29,15 +29,11 @@ export async function saveEndMetricsDraft(formData: FormData) {
       skeletalMuscleMass: num("skeletalMuscleMass"),
       weightLbs: num("weightLbs"),
       bodyFatPercent: num("bodyFatPercent"),
-      boneMass: num("boneMass"),
-      muscleMass: num("muscleMass"),
     },
     update: {
       skeletalMuscleMass: num("skeletalMuscleMass"),
       weightLbs: num("weightLbs"),
       bodyFatPercent: num("bodyFatPercent"),
-      boneMass: num("boneMass"),
-      muscleMass: num("muscleMass"),
     },
   });
 
@@ -50,7 +46,12 @@ export async function sendPlayerEndMetrics(userId: string) {
   const draft = await prisma.playerEndMetricsDraft.findUnique({
     where: { userId_gymId: { userId, gymId: gym.id } },
   });
-  if (!draft?.skeletalMuscleMass && !draft?.weightLbs && !draft?.bodyFatPercent) {
+  if (
+    !draft ||
+    (draft.skeletalMuscleMass == null &&
+      draft.weightLbs == null &&
+      draft.bodyFatPercent == null)
+  ) {
     return { error: "Enter at least skeletal muscle mass, weight, or body fat %" };
   }
 
@@ -60,8 +61,6 @@ export async function sendPlayerEndMetrics(userId: string) {
       endSkeletalMuscleMass: draft.skeletalMuscleMass,
       endWeightLbs: draft.weightLbs,
       endBodyFatPercent: draft.bodyFatPercent,
-      endBoneMass: draft.boneMass,
-      endMuscleMass: draft.muscleMass,
       endMetricsSentAt: new Date(),
     },
   });
@@ -70,6 +69,52 @@ export async function sendPlayerEndMetrics(userId: string) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/me");
   return { success: true };
+}
+
+export async function sendAllPlayerData() {
+  const { gym } = await requireApprovedAdminGym();
+
+  const players = await prisma.user.findMany({
+    where: { gymId: gym.id, role: "PLAYER" },
+    select: { id: true },
+  });
+
+  const drafts = await prisma.playerEndMetricsDraft.findMany({
+    where: { gymId: gym.id },
+  });
+  const draftMap = new Map(drafts.map((d) => [d.userId, d]));
+
+  let sentCount = 0;
+  for (const p of players) {
+    const draft = draftMap.get(p.id);
+    if (!draft) continue;
+    if (
+      draft.skeletalMuscleMass == null &&
+      draft.weightLbs == null &&
+      draft.bodyFatPercent == null
+    ) {
+      continue;
+    }
+    await prisma.user.update({
+      where: { id: p.id },
+      data: {
+        endSkeletalMuscleMass: draft.skeletalMuscleMass,
+        endWeightLbs: draft.weightLbs,
+        endBodyFatPercent: draft.bodyFatPercent,
+        endMetricsSentAt: new Date(),
+      },
+    });
+    sentCount++;
+  }
+
+  if (sentCount === 0) {
+    return { error: "Enter metrics for at least one player before sending all" };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/me");
+  return { success: true, sentCount };
 }
 
 async function buildArchiveSnapshot(gymId: string) {
@@ -93,8 +138,6 @@ async function buildArchiveSnapshot(gymId: string) {
       skeletalMuscleMass: p.endSkeletalMuscleMass,
       weightLbs: p.endWeightLbs,
       bodyFatPercent: p.endBodyFatPercent,
-      boneMass: p.endBoneMass,
-      muscleMass: p.endMuscleMass,
     },
     habits: habitLabelsFromCompletions(p.completions),
   }));
@@ -115,7 +158,7 @@ export async function sendAllEndMetrics() {
 
   for (const p of players) {
     const draft = draftMap.get(p.id);
-    if (!draft) return { error: "Complete metrics for every player before sending all" };
+    if (!draft) return { error: "Complete metrics for every player before archiving" };
     if (
       draft.skeletalMuscleMass == null &&
       draft.weightLbs == null &&
@@ -134,8 +177,6 @@ export async function sendAllEndMetrics() {
           endSkeletalMuscleMass: draft.skeletalMuscleMass,
           endWeightLbs: draft.weightLbs,
           endBodyFatPercent: draft.bodyFatPercent,
-          endBoneMass: draft.boneMass,
-          endMuscleMass: draft.muscleMass,
           endMetricsSentAt: new Date(),
         },
       });

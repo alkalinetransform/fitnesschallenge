@@ -40,8 +40,8 @@ export function AddChallengeForm() {
           <Input id="points" name="points" type="number" min={1} defaultValue={10} required />
         </div>
         <div>
-          <Label htmlFor="durationWeeks">Duration (weeks)</Label>
-          <Input id="durationWeeks" name="durationWeeks" type="number" min={1} defaultValue={2} required />
+          <Label htmlFor="durationDays">Duration (days)</Label>
+          <Input id="durationDays" name="durationDays" type="number" min={1} max={365} defaultValue={7} required />
         </div>
         <div className="sm:col-span-2">
           <Label htmlFor="startDate">Start date (optional)</Label>

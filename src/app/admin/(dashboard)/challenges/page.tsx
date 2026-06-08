@@ -20,7 +20,7 @@ export default async function AdminChallengesPage() {
     name: c.name,
     description: c.description,
     points: c.points,
-    durationWeeks: c.durationWeeks,
+    durationDays: c.durationDays,
     startDate: c.startDate.toISOString(),
     expiresAt: c.expiresAt.toISOString(),
     index: challenges.length - i,

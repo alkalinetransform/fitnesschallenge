@@ -19,6 +19,12 @@ export default async function AdminDashboardPage() {
     where: { gymId: gym.id, role: "PLAYER", isFrozen: false },
   });
 
+  const messagePlayers = await prisma.user.findMany({
+    where: { gymId: gym.id, role: "PLAYER", isFrozen: false },
+    select: { id: true, name: true, email: true },
+    orderBy: { name: "asc" },
+  });
+
   const teams = gym.challengeEnded ? await getTeamScoresTotal(gym.id) : [];
   const allPlayers = gym.challengeEnded ? await getPlayerScoresTotal(gym.id) : [];
 
@@ -45,8 +51,6 @@ export default async function AdminDashboardPage() {
         skeletalMuscleMass: draftMap.get(p.id)?.skeletalMuscleMass ?? null,
         weightLbs: draftMap.get(p.id)?.weightLbs ?? null,
         bodyFatPercent: draftMap.get(p.id)?.bodyFatPercent ?? null,
-        boneMass: draftMap.get(p.id)?.boneMass ?? null,
-        muscleMass: draftMap.get(p.id)?.muscleMass ?? null,
       },
     }));
 
@@ -68,7 +72,7 @@ export default async function AdminDashboardPage() {
       />
 
       <div className="flex flex-wrap items-center gap-3">
-        <AdminBroadcastModal />
+        <AdminBroadcastModal players={messagePlayers} />
       </div>
 
       {gym.challengeEnded && (

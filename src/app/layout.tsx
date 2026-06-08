@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -17,6 +17,12 @@ const body = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "FitChallenge",
   description: "Gym fitness challenge tracker with teams and leaderboards",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({

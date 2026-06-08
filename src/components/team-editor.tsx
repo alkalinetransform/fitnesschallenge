@@ -2,11 +2,11 @@
 
 import { useTransition } from "react";
 import { renameTeam } from "@/actions/teams";
-import { movePlayerToTeam } from "@/actions/teams";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardTitle } from "@/components/ui/card";
 import { TeamRosterPanel } from "@/components/team-roster-panel";
+import { TeamMoveControl } from "@/components/team-move-control";
 
 type TeamData = {
   id: string;
@@ -24,6 +24,7 @@ export function TeamEditor({
   unassigned: Player[];
 }) {
   const [pending, startTransition] = useTransition();
+  const allTeams = teams.map((t) => ({ id: t.id, name: t.name }));
 
   return (
     <div className="space-y-4">
@@ -58,29 +59,14 @@ export function TeamEditor({
       {unassigned.length > 0 && (
         <Card className="border-brand-500/15">
           <CardTitle>Unassigned players</CardTitle>
-          <ul className="mt-3 max-h-[176px] space-y-2 overflow-y-auto scroll-smooth pr-1">
+          <ul className="mt-3 max-h-[176px] space-y-2 overflow-y-auto scroll-smooth pr-1 scrollbar-brand">
             {unassigned.map((p) => (
               <li
                 key={p.id}
-                className="flex flex-wrap items-center gap-2 rounded-lg border border-brand-500/15 bg-gradient-to-r from-brand-500/10 to-transparent px-3 py-2 text-sm"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand-500/15 bg-gradient-to-r from-brand-500/10 to-transparent px-3 py-2 text-sm"
               >
-                <span className="flex-1 font-medium text-white">{p.name}</span>
-                {teams.map((t) => (
-                  <form
-                    key={t.id}
-                    action={(fd) => {
-                      startTransition(async () => {
-                        await movePlayerToTeam(fd);
-                      });
-                    }}
-                  >
-                    <input type="hidden" name="userId" value={p.id} />
-                    <input type="hidden" name="teamId" value={t.id} />
-                    <Button type="submit" variant="outline" size="sm" loading={pending} className="text-xs">
-                      Add to {t.name}
-                    </Button>
-                  </form>
-                ))}
+                <span className="font-medium text-white">{p.name}</span>
+                <TeamMoveControl userId={p.id} teams={allTeams} pending={pending} />
               </li>
             ))}
           </ul>

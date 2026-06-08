@@ -17,6 +17,8 @@ const migrations = [
   "20250520000000_init",
   "20250521000000_challenge_ended",
   "20250522000000_formal_admin",
+  "20250603000000_transformation_features",
+  "20250604000000_message_targets",
 ];
 
 function run(cmd) {

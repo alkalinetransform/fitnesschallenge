@@ -54,6 +54,7 @@ model User {
   completions             Completion[]
   teamMembers             TeamMember[]
   messageDismissals       MessageDismissal[]
+  broadcastTargets        BroadcastMessageTarget[]
   endMetricsDrafts        PlayerEndMetricsDraft[]
   createdAt               DateTime  @default(now())
 }
@@ -92,14 +93,25 @@ model Gym {
 }
 
 model BroadcastMessage {
-  id          String             @id @default(cuid())
-  gymId       String
-  gym         Gym                @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  body        String
-  sendToEmail Boolean            @default(false)
-  sendToInApp Boolean            @default(true)
-  createdAt   DateTime           @default(now())
-  dismissals  MessageDismissal[]
+  id             String                   @id @default(cuid())
+  gymId          String
+  gym            Gym                      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  body           String
+  sendToEmail    Boolean                  @default(false)
+  sendToInApp    Boolean                  @default(true)
+  isBroadcastAll Boolean                  @default(true)
+  createdAt      DateTime                 @default(now())
+  dismissals     MessageDismissal[]
+  targets        BroadcastMessageTarget[]
+}
+
+model BroadcastMessageTarget {
+  messageId String
+  userId    String
+  message   BroadcastMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
 }
 
 model MessageDismissal {
@@ -146,7 +158,7 @@ model Challenge {
   description   String
   points        Int
   startDate     DateTime     @default(now())
-  durationWeeks Int          @default(1)
+  durationDays  Int          @default(7) @map("durationWeeks")
   expiresAt     DateTime
   completions   Completion[]
   createdAt     DateTime     @default(now())

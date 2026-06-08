@@ -10,7 +10,7 @@ export type ChallengeRow = {
   name: string;
   description: string;
   points: number;
-  durationWeeks: number;
+  durationDays: number;
   startDate: string;
   expiresAt: string;
   index: number;
@@ -57,23 +57,30 @@ function ChallengeCard({
         {formatDate(c.startDate)} → {formatDate(c.expiresAt)}
       </p>
       <p className="text-xs text-slate-500">
-        {c.durationWeeks} week{c.durationWeeks > 1 ? "s" : ""}
+        {c.durationDays} day{c.durationDays !== 1 ? "s" : ""}
         {active ? " · current" : " · archived"}
       </p>
       {canDelete && (
-        <form
-          action={(fd) => {
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          loading={pending}
+          className="mt-3 w-full"
+          onClick={() => {
+            const ok = window.confirm(
+              `Delete "${c.name}" for everyone?\n\nThis permanently removes the challenge and deletes all points players already earned from it. This cannot be undone.`
+            );
+            if (!ok) return;
+            const fd = new FormData();
+            fd.set("id", c.id);
             startTransition(async () => {
               await deleteChallenge(fd);
             });
           }}
-          className="mt-3"
         >
-          <input type="hidden" name="id" value={c.id} />
-          <Button type="submit" variant="destructive" size="sm" loading={pending} className="w-full">
-            Remove
-          </Button>
-        </form>
+          Delete
+        </Button>
       )}
     </div>
   );
@@ -212,7 +219,7 @@ export function ChallengesBoard({
       />
       <ChallengeSection
         title="Archived challenges"
-        subtitle="Past tasks from this or previous competitions"
+        subtitle="Expired tasks — moved here automatically when duration ends"
         items={archived}
         search={archivedSearch}
         onSearch={setArchivedSearch}

@@ -15,6 +15,7 @@ export async function sendBroadcastMessage(formData: FormData) {
   const { gym } = await requireApprovedAdminGym();
   const sendToEmail = formData.get("sendToEmail") === "on";
   const sendToInApp = formData.get("sendToInApp") === "on";
+  const recipientIds = formData.getAll("recipientIds") as string[];
 
   const parsed = broadcastSchema.safeParse({
     body: formData.get("body"),
@@ -29,18 +30,43 @@ export async function sendBroadcastMessage(formData: FormData) {
     return { error: "Select at least one delivery method" };
   }
 
-  await prisma.broadcastMessage.create({
+  const isBroadcastAll = recipientIds.length === 0;
+
+  if (!isBroadcastAll) {
+    const validPlayers = await prisma.user.findMany({
+      where: { gymId: gym.id, role: "PLAYER", id: { in: recipientIds } },
+      select: { id: true },
+    });
+    if (validPlayers.length === 0) {
+      return { error: "Select at least one valid player" };
+    }
+  }
+
+  const message = await prisma.broadcastMessage.create({
     data: {
       gymId: gym.id,
       body: parsed.data.body,
       sendToEmail,
       sendToInApp,
+      isBroadcastAll,
+      ...(isBroadcastAll
+        ? {}
+        : {
+            targets: {
+              create: recipientIds.map((userId) => ({ userId })),
+            },
+          }),
     },
   });
 
   if (sendToEmail) {
     const players = await prisma.user.findMany({
-      where: { gymId: gym.id, role: "PLAYER", isFrozen: false },
+      where: {
+        gymId: gym.id,
+        role: "PLAYER",
+        isFrozen: false,
+        ...(isBroadcastAll ? {} : { id: { in: recipientIds } }),
+      },
       select: { email: true },
     });
     const base = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
@@ -51,7 +77,7 @@ export async function sendBroadcastMessage(formData: FormData) {
   }
 
   revalidatePath("/admin");
-  return { success: true };
+  return { success: true, messageId: message.id };
 }
 
 export async function dismissMessage(messageId: string) {

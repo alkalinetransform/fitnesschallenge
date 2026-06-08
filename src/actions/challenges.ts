@@ -10,7 +10,7 @@ const challengeSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
   points: z.coerce.number().int().min(1, "Points must be at least 1"),
-  durationWeeks: z.coerce.number().int().min(1).max(52),
+  durationDays: z.coerce.number().int().min(1).max(365),
   startDate: z.coerce.date().optional(),
 });
 
@@ -23,13 +23,13 @@ export async function createChallenge(formData: FormData) {
     name: formData.get("name"),
     description: formData.get("description"),
     points: formData.get("points"),
-    durationWeeks: formData.get("durationWeeks"),
+    durationDays: formData.get("durationDays"),
     startDate: startRaw ? new Date(startRaw) : new Date(),
   });
   if (!parsed.success) return { error: parsed.error.errors[0]?.message };
 
   const startDate = parsed.data.startDate ?? new Date();
-  const expiresAt = challengeExpiresAt(startDate, parsed.data.durationWeeks);
+  const expiresAt = challengeExpiresAt(startDate, parsed.data.durationDays);
 
   await prisma.challenge.create({
     data: {
@@ -38,7 +38,7 @@ export async function createChallenge(formData: FormData) {
       name: parsed.data.name,
       description: parsed.data.description,
       points: parsed.data.points,
-      durationWeeks: parsed.data.durationWeeks,
+      durationDays: parsed.data.durationDays,
       startDate,
       expiresAt,
     },
@@ -59,7 +59,7 @@ export async function updateChallenge(formData: FormData) {
     name: formData.get("name"),
     description: formData.get("description"),
     points: formData.get("points"),
-    durationWeeks: formData.get("durationWeeks"),
+    durationDays: formData.get("durationDays"),
   });
   if (!parsed.success) return { error: parsed.error.errors[0]?.message };
 
@@ -68,7 +68,7 @@ export async function updateChallenge(formData: FormData) {
   });
   if (!challenge) return { error: "Challenge not found" };
 
-  const expiresAt = challengeExpiresAt(challenge.startDate, parsed.data.durationWeeks);
+  const expiresAt = challengeExpiresAt(challenge.startDate, parsed.data.durationDays);
 
   await prisma.challenge.update({
     where: { id },
@@ -76,7 +76,7 @@ export async function updateChallenge(formData: FormData) {
       name: parsed.data.name,
       description: parsed.data.description,
       points: parsed.data.points,
-      durationWeeks: parsed.data.durationWeeks,
+      durationDays: parsed.data.durationDays,
       expiresAt,
     },
   });
@@ -92,13 +92,19 @@ export async function deleteChallenge(formData: FormData) {
   const id = formData.get("id") as string;
   const challenge = await prisma.challenge.findFirst({
     where: { id, gymId: gym.id },
+    include: { _count: { select: { completions: true } } },
   });
   if (!challenge) return { error: "Challenge not found" };
 
-  await prisma.challenge.delete({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.completion.deleteMany({ where: { challengeId: id } });
+    await tx.challenge.delete({ where: { id } });
+  });
+
   revalidatePath("/admin/challenges");
   revalidatePath("/dashboard");
-  return { success: true };
+  revalidatePath("/leaderboard");
+  return { success: true, removedCompletions: challenge._count.completions };
 }
 
 export async function deleteChallengeForm(formData: FormData): Promise<void> {

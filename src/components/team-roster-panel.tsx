@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { movePlayerToTeam, removePlayerFromTeam } from "@/actions/teams";
+import { removePlayerFromTeam } from "@/actions/teams";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TeamMoveControl } from "@/components/team-move-control";
 
 type TeamOption = { id: string; name: string };
 
@@ -33,9 +34,7 @@ export function TeamRosterPanel({
         placeholder="Search players…"
         className="mb-2 border-brand-500/20 bg-slate-950/30"
       />
-      <ul
-        className="scrollbar-brand max-h-[176px] space-y-2 overflow-y-auto scroll-smooth pr-1"
-      >
+      <ul className="scrollbar-brand max-h-[176px] space-y-2 overflow-y-auto scroll-smooth pr-1">
         {filtered.length === 0 ? (
           <li className="text-sm text-slate-500">No players match.</li>
         ) : (
@@ -45,23 +44,10 @@ export function TeamRosterPanel({
               className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand-500/15 bg-gradient-to-r from-brand-500/10 to-transparent px-3 py-2 text-sm"
             >
               <span className="font-medium text-white">{m.name}</span>
-              <div className="flex flex-wrap gap-1">
-                {otherTeams.map((t) => (
-                  <form
-                    key={t.id}
-                    action={(fd) => {
-                      startTransition(async () => {
-                        await movePlayerToTeam(fd);
-                      });
-                    }}
-                  >
-                    <input type="hidden" name="userId" value={m.userId} />
-                    <input type="hidden" name="teamId" value={t.id} />
-                    <Button type="submit" variant="outline" size="sm" loading={pending} className="text-xs">
-                      → {t.name}
-                    </Button>
-                  </form>
-                ))}
+              <div className="flex flex-wrap items-center gap-1">
+                {otherTeams.length > 0 && (
+                  <TeamMoveControl userId={m.userId} teams={otherTeams} pending={pending} />
+                )}
                 <form
                   action={(fd) => {
                     startTransition(async () => {
@@ -71,7 +57,7 @@ export function TeamRosterPanel({
                 >
                   <input type="hidden" name="userId" value={m.userId} />
                   <Button type="submit" variant="ghost" size="sm" className="text-xs text-red-400">
-                    Remove
+                    Unassign
                   </Button>
                 </form>
               </div>
@@ -79,9 +65,7 @@ export function TeamRosterPanel({
           ))
         )}
       </ul>
-      <p className="mt-1 text-[10px] text-slate-500">
-        {teamName} · showing {Math.min(4, filtered.length)}+ per scroll
-      </p>
+      <p className="mt-1 text-[10px] text-slate-500">{teamName} · scroll to browse</p>
     </div>
   );
 }

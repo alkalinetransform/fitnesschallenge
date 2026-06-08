@@ -28,6 +28,10 @@ export default async function DashboardLayout({
       gymId: session.user.gymId!,
       sendToInApp: true,
       dismissals: { none: { userId: session.user.id } },
+      OR: [
+        { isBroadcastAll: true },
+        { targets: { some: { userId: session.user.id } } },
+      ],
     },
     orderBy: { createdAt: "desc" },
     select: { id: true, body: true },

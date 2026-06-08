@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 const ENCOURAGEMENTS = [
   "You showed up — and it shows.",
   "Small habits, big transformation.",
-  "Your future self is cheering right now.",
+  "Your past self is cheering right now.",
   "Consistency beats intensity. You proved it.",
 ];
 

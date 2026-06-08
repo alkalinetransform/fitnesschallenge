@@ -33,13 +33,11 @@ export default async function AdminPlayersPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {ended && <AdminTabEndedOverlay />}
-      <div className={ended ? "pointer-events-none space-y-6 opacity-40" : "space-y-6"}>
       <div>
         <h1 className="font-display text-2xl font-bold text-white">Players</h1>
         <p className="text-sm text-slate-400">2×4 grid · search · freeze or delete accounts</p>
       </div>
       <AdminPlayersGrid players={rows} />
-      </div>
     </div>
   );
 }

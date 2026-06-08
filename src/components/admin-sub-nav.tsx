@@ -4,10 +4,11 @@ import { EnvelopedTabs, type EnvelopedTab } from "@/components/enveloped-tabs";
 
 export function AdminSubNav({ competitionEnded }: { competitionEnded: boolean }) {
   const tabs: EnvelopedTab[] = [
-    { href: "/admin", label: "Dashboard", match: (p) => p === "/admin" },
+    { href: "/admin", label: "Dashboard", shortLabel: "Home", match: (p) => p === "/admin" },
     {
       href: "/admin/challenges",
       label: "Challenges",
+      shortLabel: "Tasks",
       match: (p) => p.startsWith("/admin/challenges"),
       disabled: competitionEnded,
     },
@@ -21,9 +22,13 @@ export function AdminSubNav({ competitionEnded }: { competitionEnded: boolean })
       href: "/admin/players",
       label: "Players",
       match: (p) => p.startsWith("/admin/players"),
-      disabled: competitionEnded,
     },
-    { href: "/leaderboard", label: "Leaderboard", match: (p) => p.startsWith("/leaderboard") },
+    {
+      href: "/leaderboard",
+      label: "Leaderboard",
+      shortLabel: "Ranks",
+      match: (p) => p.startsWith("/leaderboard"),
+    },
   ];
 
   return <EnvelopedTabs tabs={tabs} ariaLabel="Admin sections" />;

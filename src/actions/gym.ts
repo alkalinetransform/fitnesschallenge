@@ -90,6 +90,11 @@ export async function startNewCompetitionWithTeams(formData: FormData) {
   const groups =
     players.length >= 2 ? splitIntoTeams(players, parsed.data.teamCount) : [];
 
+  const playerIds = await prisma.user.findMany({
+    where: { gymId: gym.id, role: "PLAYER" },
+    select: { id: true },
+  });
+
   await prisma.$transaction(async (tx) => {
     await tx.gym.update({
       where: { id: gym.id },
@@ -117,9 +122,21 @@ export async function startNewCompetitionWithTeams(formData: FormData) {
       }
     }
 
+    await tx.completion.deleteMany({
+      where: { userId: { in: playerIds.map((p) => p.id) } },
+    });
+
+    await tx.playerEndMetricsDraft.deleteMany({ where: { gymId: gym.id } });
+
     await tx.user.updateMany({
       where: { gymId: gym.id, role: "PLAYER" },
       data: {
+        profileSetupComplete: false,
+        stepsPerDay: null,
+        waterOzPerDay: null,
+        startSkeletalMuscleMass: null,
+        startWeightLbs: null,
+        startBodyFatPercent: null,
         endSkeletalMuscleMass: null,
         endWeightLbs: null,
         endBodyFatPercent: null,
@@ -135,6 +152,7 @@ export async function startNewCompetitionWithTeams(formData: FormData) {
   revalidatePath("/admin/challenges");
   revalidatePath("/admin/teams");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/me");
   revalidatePath("/leaderboard");
   return { success: true };
 }

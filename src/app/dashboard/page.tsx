@@ -63,6 +63,13 @@ export default async function DashboardPage() {
         </p>
       </div>
 
+      {!locked && !member && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          You&apos;re not assigned to a team yet — don&apos;t worry, you&apos;ll be placed on a team
+          soon!
+        </div>
+      )}
+
       {awaitingResults && (
         <div className="rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-4 text-center text-sm text-brand-100">
           The Transformation Challenge ended! Awaiting updated data…
@@ -116,7 +123,7 @@ export default async function DashboardPage() {
                         <p className="font-semibold text-white">{c.name}</p>
                         <p className="text-xs text-slate-400">{c.description}</p>
                         <span className="mt-1 inline-block text-xs font-bold text-brand-400">
-                          +{c.points} pts · {c.durationWeeks}wk
+                          +{c.points} pts · {c.durationDays}d
                         </span>
                       </div>
                     </li>

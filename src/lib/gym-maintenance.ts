@@ -16,6 +16,8 @@ export async function maintainGym(gymId: string) {
   return gym;
 }
 
-export function challengeExpiresAt(startDate: Date, durationWeeks: number): Date {
-  return new Date(startDate.getTime() + durationWeeks * 7 * 24 * 60 * 60 * 1000);
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export function challengeExpiresAt(startDate: Date, durationDays: number): Date {
+  return new Date(startDate.getTime() + durationDays * DAY_MS);
 }

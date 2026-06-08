@@ -74,8 +74,8 @@ async function main() {
 
   await prisma.challenge.deleteMany({ where: { gymId: gym.id } });
   const c1Start = new Date();
-  const exp = (weeks: number) =>
-    new Date(c1Start.getTime() + weeks * 7 * 24 * 60 * 60 * 1000);
+  const expDays = (days: number) =>
+    new Date(c1Start.getTime() + days * 24 * 60 * 60 * 1000);
 
   await prisma.challenge.createMany({
     data: [
@@ -85,9 +85,9 @@ async function main() {
         name: "10K steps",
         description: "Walk at least 10,000 steps daily.",
         points: 10,
-        durationWeeks: 2,
+        durationDays: 14,
         startDate: c1Start,
-        expiresAt: exp(2),
+        expiresAt: expDays(14),
       },
       {
         gymId: gym.id,
@@ -95,9 +95,9 @@ async function main() {
         name: "128 fl oz water",
         description: "Drink 128 fl oz of water each day.",
         points: 15,
-        durationWeeks: 3,
+        durationDays: 21,
         startDate: c1Start,
-        expiresAt: exp(3),
+        expiresAt: expDays(21),
       },
       {
         gymId: gym.id,
@@ -105,9 +105,9 @@ async function main() {
         name: "30 min cardio",
         description: "Complete 30 minutes of cardio.",
         points: 20,
-        durationWeeks: 1,
+        durationDays: 7,
         startDate: c1Start,
-        expiresAt: exp(1),
+        expiresAt: expDays(7),
       },
     ],
   });
