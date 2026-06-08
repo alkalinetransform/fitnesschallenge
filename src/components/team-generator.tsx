@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatTeamLabel } from "@/lib/team-icons";
 
 type PreviewTeam = {
   name: string;
+  icon?: string;
   players: { id: string; name: string }[];
 };
 
@@ -61,16 +63,16 @@ export function TeamGenerator({ playerCount }: { playerCount: number }) {
               id="teamCount"
               type="number"
               min={1}
-              max={playerCount || 1}
+              max={50}
               value={teamCount}
-              onChange={(e) => setTeamCount(Number(e.target.value))}
+              onChange={(e) => setTeamCount(Math.min(50, Math.max(1, Number(e.target.value) || 1)))}
               className="w-28"
             />
           </div>
           <Button type="button" variant="outline" size="lg" onClick={handlePreview} disabled={pending}>
             Preview split
           </Button>
-          <Button type="button" size="lg" onClick={handleGenerate} disabled={pending || playerCount < 2}>
+          <Button type="button" size="lg" onClick={handleGenerate} disabled={pending || playerCount < 1}>
             Confirm & generate
           </Button>
         </div>
@@ -81,7 +83,7 @@ export function TeamGenerator({ playerCount }: { playerCount: number }) {
         <div className="grid animate-fade-in gap-4 sm:grid-cols-2">
           {preview.map((team, i) => (
             <Card key={team.name} className={`animate-scale-in stagger-${Math.min(i + 1, 6)}`}>
-              <CardTitle>{team.name}</CardTitle>
+              <CardTitle>{formatTeamLabel(team.name, team.icon)}</CardTitle>
               <ul className="mt-3 space-y-2">
                 {team.players.length === 0 ? (
                   <li className="text-sm text-slate-500">No players</li>

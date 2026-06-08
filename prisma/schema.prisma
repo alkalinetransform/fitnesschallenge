@@ -172,6 +172,7 @@ model Team {
   gymId   String
   gym     Gym          @relation(fields: [gymId], references: [id], onDelete: Cascade)
   name    String
+  icon    String       @default("🍊")
   members TeamMember[]
 }
 

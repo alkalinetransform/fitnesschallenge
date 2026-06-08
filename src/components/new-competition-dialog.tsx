@@ -59,7 +59,7 @@ export function NewCompetitionDialog({ playerCount }: { playerCount: number }) {
               name="teamCount"
               type="number"
               min={1}
-              max={Math.max(playerCount, 1)}
+              max={50}
               defaultValue={Math.min(4, Math.max(playerCount, 1))}
               required
             />

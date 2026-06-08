@@ -4,6 +4,7 @@ import { Nav } from "@/components/nav";
 import { AdminSubNav } from "@/components/admin-sub-nav";
 import { PlayerSubNav } from "@/components/player-sub-nav";
 import { prisma } from "@/lib/db";
+import { getMaxSelectableWeek } from "@/lib/weeks";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export default async function LeaderboardLayout({
 
   let competitionEnded = false;
   let resultsReady = false;
+  let calendarWeek: number | undefined;
 
   if (session.user.role === "ADMIN") {
     const gym = await prisma.gym.findUnique({
@@ -29,11 +31,22 @@ export default async function LeaderboardLayout({
       select: {
         endMetricsSentAt: true,
         resultsWrapSeenAt: true,
-        gym: { select: { challengeEnded: true } },
+        gym: {
+          select: {
+            challengeEnded: true,
+            activeWeek: true,
+            seasonStartDate: true,
+          },
+        },
       },
     });
     competitionEnded = user?.gym?.challengeEnded ?? false;
     resultsReady = Boolean(user?.endMetricsSentAt && !user.resultsWrapSeenAt);
+    if (user?.gym) {
+      calendarWeek = user.gym.challengeEnded
+        ? user.gym.activeWeek
+        : getMaxSelectableWeek(user.gym.seasonStartDate);
+    }
   }
 
   return (
@@ -42,7 +55,7 @@ export default async function LeaderboardLayout({
       {session.user.role === "ADMIN" ? (
         <AdminSubNav competitionEnded={competitionEnded} />
       ) : (
-        <PlayerSubNav resultsReady={resultsReady} />
+        <PlayerSubNav resultsReady={resultsReady} calendarWeek={calendarWeek} />
       )}
       <div className="mx-auto max-w-4xl px-4 py-6 animate-fade-in overflow-x-hidden">{children}</div>
     </>

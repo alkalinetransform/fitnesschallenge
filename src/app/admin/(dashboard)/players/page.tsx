@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getPlayerScoresTotal } from "@/lib/scores";
 import { isNewPlayer } from "@/lib/player-utils";
 import { AdminPlayersGrid, type AdminPlayerRow } from "@/components/admin-players-grid";
+import { formatTeamLabel } from "@/lib/team-icons";
 import { AdminTabEndedOverlay } from "@/components/admin-tab-ended-overlay";
 
 export default async function AdminPlayersPage() {
@@ -12,7 +13,7 @@ export default async function AdminPlayersPage() {
   const players = await prisma.user.findMany({
     where: { gymId: gym.id, role: "PLAYER" },
     include: {
-      teamMembers: { include: { team: { select: { name: true } } } },
+      teamMembers: { include: { team: { select: { name: true, icon: true } } } },
     },
     orderBy: { name: "asc" },
   });
@@ -26,7 +27,9 @@ export default async function AdminPlayersPage() {
     email: p.email,
     isFrozen: p.isFrozen,
     isNew: isNewPlayer(p.createdAt),
-    teamName: p.teamMembers[0]?.team.name ?? null,
+    teamName: p.teamMembers[0]?.team
+      ? formatTeamLabel(p.teamMembers[0].team.name, p.teamMembers[0].team.icon)
+      : null,
     points: scoreMap.get(p.id) ?? 0,
   }));
 

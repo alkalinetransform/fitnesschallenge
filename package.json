@@ -13,18 +13,23 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:production-setup": "node scripts/production-db-setup.mjs"
+    "db:production-setup": "node scripts/production-db-setup.mjs",
+    "db:check": "node scripts/db-check.mjs"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@prisma/adapter-neon": "^6.19.3",
     "@prisma/client": "^6.8.2",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "next": "^15.3.2",
     "next-auth": "^5.0.0-beta.28",
+    "nodemailer": "^7.0.13",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^3.3.0",
+    "ws": "^8.21.0",
     "zod": "^3.25.28"
   },
   "prisma": {
@@ -35,8 +40,10 @@
     "@tailwindcss/postcss": "^4.1.7",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.15.21",
+    "@types/nodemailer": "^8.0.0",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
+    "@types/ws": "^8.18.1",
     "eslint": "^9.27.0",
     "eslint-config-next": "^15.3.2",
     "prisma": "^6.8.2",

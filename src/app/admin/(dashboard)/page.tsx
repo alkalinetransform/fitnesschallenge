@@ -5,6 +5,7 @@ import { CompetitionStatusBanner } from "@/components/competition-status-banner"
 import { getTeamScoresTotal, getPlayerScoresTotal } from "@/lib/scores";
 import { hasActiveCompetition } from "@/lib/site-gym";
 import { WeekControl } from "@/components/week-control";
+import { getMaxSelectableWeek } from "@/lib/weeks";
 import { NewCompetitionDialog } from "@/components/new-competition-dialog";
 import { CompetitionInfoBox } from "@/components/competition-info-box";
 import { AdminBroadcastModal } from "@/components/admin-broadcast-modal";
@@ -14,6 +15,7 @@ import type { EndMetricsPlayer } from "@/components/admin-end-metrics-panel";
 export default async function AdminDashboardPage() {
   const { gym } = await requireApprovedAdminGym();
   const active = hasActiveCompetition(gym);
+  const maxWeek = getMaxSelectableWeek(gym.seasonStartDate);
 
   const playerCount = await prisma.user.count({
     where: { gymId: gym.id, role: "PLAYER", isFrozen: false },
@@ -88,7 +90,11 @@ export default async function AdminDashboardPage() {
 
       {active && (
         <>
-          <WeekControl defaultWeek={gym.activeWeek} />
+          <WeekControl
+            defaultWeek={gym.activeWeek}
+            calendarWeek={maxWeek}
+            maxWeek={maxWeek}
+          />
 
           <div className="space-y-2 border-t border-white/10 pt-6">
             <p className="text-sm text-slate-500">

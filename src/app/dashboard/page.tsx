@@ -7,6 +7,7 @@ import { StatCard } from "@/components/stat-card";
 import { CompetitionStatusBanner } from "@/components/competition-status-banner";
 import { TeamRosterGrid } from "@/components/leaderboard-podium";
 import { cn } from "@/lib/utils";
+import { formatTeamLabel } from "@/lib/team-icons";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +60,7 @@ export default async function DashboardPage() {
         <h1 className="font-display text-2xl font-bold text-white">{gym.name}</h1>
         <p className="text-sm text-slate-400">
           {locked ? "Competition ended" : `Week ${gym.activeWeek}`}
-          {member ? ` · ${member.team.name}` : ""}
+          {member ? ` · ${formatTeamLabel(member.team.name, member.team.icon)}` : ""}
         </p>
       </div>
 

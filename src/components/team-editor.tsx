@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardTitle } from "@/components/ui/card";
 import { TeamRosterPanel } from "@/components/team-roster-panel";
 import { TeamMoveControl } from "@/components/team-move-control";
+import { formatTeamLabel } from "@/lib/team-icons";
 
 type TeamData = {
   id: string;
   name: string;
+  icon: string;
   members: { userId: string; name: string }[];
 };
 
@@ -24,12 +26,17 @@ export function TeamEditor({
   unassigned: Player[];
 }) {
   const [pending, startTransition] = useTransition();
-  const allTeams = teams.map((t) => ({ id: t.id, name: t.name }));
+  const allTeams = teams.map((t) => ({
+    id: t.id,
+    name: formatTeamLabel(t.name, t.icon),
+  }));
 
   return (
     <div className="space-y-4">
       {teams.map((team) => {
-        const otherTeams = teams.filter((t) => t.id !== team.id).map((t) => ({ id: t.id, name: t.name }));
+        const otherTeams = teams
+          .filter((t) => t.id !== team.id)
+          .map((t) => ({ id: t.id, name: formatTeamLabel(t.name, t.icon) }));
         return (
           <Card key={team.id} className="border-brand-500/15">
             <form
@@ -41,7 +48,7 @@ export function TeamEditor({
               className="flex flex-wrap items-center gap-2"
             >
               <input type="hidden" name="teamId" value={team.id} />
-              <CardTitle className="flex-1">{team.name}</CardTitle>
+              <CardTitle className="flex-1">{formatTeamLabel(team.name, team.icon)}</CardTitle>
               <Input name="name" defaultValue={team.name} className="max-w-[160px] py-2" />
               <Button type="submit" variant="outline" size="md" loading={pending}>
                 Rename

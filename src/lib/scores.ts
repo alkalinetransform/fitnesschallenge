@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { formatTeamLabel } from "@/lib/team-icons";
 
 export type PlayerScore = {
   userId: string;
@@ -10,6 +11,7 @@ export type PlayerScore = {
 export type TeamScore = {
   teamId: string;
   name: string;
+  icon: string;
   points: number;
   players: PlayerScore[];
 };
@@ -77,7 +79,8 @@ export async function getTeamScoresTotal(gymId: string): Promise<TeamScore[]> {
     const points = players.reduce((sum, p) => sum + p.points, 0);
     result.push({
       teamId: team.id,
-      name: team.name,
+      name: formatTeamLabel(team.name, team.icon),
+      icon: team.icon,
       points,
       players,
     });

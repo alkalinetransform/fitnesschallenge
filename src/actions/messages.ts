@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireApprovedAdminGym, requirePlayerGym } from "@/lib/session";
+import { sendBroadcastEmail } from "@/lib/email";
 
 const broadcastSchema = z.object({
   body: z.string().min(1, "Message is required").max(5000),
@@ -67,12 +68,15 @@ export async function sendBroadcastMessage(formData: FormData) {
         isFrozen: false,
         ...(isBroadcastAll ? {} : { id: { in: recipientIds } }),
       },
-      select: { email: true },
+      select: { email: true, name: true },
     });
-    const base = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-    console.log("\n--- Broadcast email (dev log) ---");
+    const subject = `${gym.competitionName} — message from your gym`;
     for (const p of players) {
-      console.log(`To: ${p.email} | ${parsed.data.body.slice(0, 80)}… | ${base}/dashboard`);
+      await sendBroadcastEmail({
+        to: p.email,
+        subject,
+        body: parsed.data.body,
+      });
     }
   }
 

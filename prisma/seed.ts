@@ -1,7 +1,6 @@
-import { PrismaClient, Role, GymStatus } from "@prisma/client";
+import { Role, GymStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
+import { prisma } from "../src/lib/db";
 
 async function main() {
   const passwordHash = await bcrypt.hash("password123", 10);
@@ -113,8 +112,12 @@ async function main() {
   });
 
   await prisma.team.deleteMany({ where: { gymId: gym.id } });
-  const team1 = await prisma.team.create({ data: { gymId: gym.id, name: "Team 1" } });
-  const team2 = await prisma.team.create({ data: { gymId: gym.id, name: "Team 2" } });
+  const team1 = await prisma.team.create({
+    data: { gymId: gym.id, name: "Team 1", icon: "🍊" },
+  });
+  const team2 = await prisma.team.create({
+    data: { gymId: gym.id, name: "Team 2", icon: "🔥" },
+  });
 
   const half = Math.ceil(players.length / 2);
   await prisma.teamMember.createMany({

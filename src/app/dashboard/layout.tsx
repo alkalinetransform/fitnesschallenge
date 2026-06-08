@@ -3,6 +3,7 @@ import { PlayerSubNav } from "@/components/player-sub-nav";
 import { PlayerExperienceLayer } from "@/components/player-experience-layer";
 import { requirePlayerGym } from "@/lib/session";
 import { prisma } from "@/lib/db";
+import { getMaxSelectableWeek } from "@/lib/weeks";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { session } = await requirePlayerGym();
+  const { session, gym } = await requirePlayerGym();
 
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: session.user.id },
@@ -37,6 +38,10 @@ export default async function DashboardLayout({
     select: { id: true, body: true },
   });
 
+  const calendarWeek = gym.challengeEnded
+    ? gym.activeWeek
+    : getMaxSelectableWeek(gym.seasonStartDate);
+
   const showWelcome = !user.welcomeSeenAt;
   const showProfileSetup = !showWelcome && !user.profileSetupComplete;
   const resultsReady = Boolean(user.endMetricsSentAt && !user.resultsWrapSeenAt);
@@ -44,7 +49,7 @@ export default async function DashboardLayout({
   return (
     <>
       <Nav />
-      <PlayerSubNav resultsReady={resultsReady} />
+      <PlayerSubNav resultsReady={resultsReady} calendarWeek={calendarWeek} />
       <PlayerExperienceLayer
         showWelcome={showWelcome}
         showProfileSetup={showProfileSetup}

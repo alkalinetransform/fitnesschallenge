@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireApprovedAdminGym } from "@/lib/session";
-import { seasonStartForWeek } from "@/lib/weeks";
+import { getMaxSelectableWeek } from "@/lib/weeks";
 import { splitIntoTeams } from "@/lib/team-shuffle";
+import { iconForTeamIndex } from "@/lib/team-icons";
 
 export async function setActiveWeek(formData: FormData) {
   const { gym } = await requireApprovedAdminGym();
@@ -14,16 +15,14 @@ export async function setActiveWeek(formData: FormData) {
   }
 
   const week = Number(formData.get("activeWeek"));
-  if (!Number.isInteger(week) || week < 1 || week > 52) {
-    return { error: "Week must be between 1 and 52" };
+  const maxWeek = getMaxSelectableWeek(gym.seasonStartDate);
+  if (!Number.isInteger(week) || week < 1 || week > maxWeek) {
+    return { error: `Week must be between 1 and ${maxWeek}` };
   }
 
   await prisma.gym.update({
     where: { id: gym.id },
-    data: {
-      activeWeek: week,
-      seasonStartDate: seasonStartForWeek(week),
-    },
+    data: { activeWeek: week },
   });
 
   revalidatePath("/admin");
@@ -82,13 +81,9 @@ export async function startNewCompetitionWithTeams(formData: FormData) {
     select: { id: true, name: true },
   });
 
-  if (players.length >= 2 && parsed.data.teamCount > players.length) {
-    return { error: "Cannot have more teams than players" };
-  }
-
   const start = new Date();
   const groups =
-    players.length >= 2 ? splitIntoTeams(players, parsed.data.teamCount) : [];
+    players.length >= 1 ? splitIntoTeams(players, parsed.data.teamCount) : [];
 
   const playerIds = await prisma.user.findMany({
     where: { gymId: gym.id, role: "PLAYER" },
@@ -112,7 +107,7 @@ export async function startNewCompetitionWithTeams(formData: FormData) {
 
     for (let i = 0; i < groups.length; i++) {
       const team = await tx.team.create({
-        data: { gymId: gym.id, name: `Team ${i + 1}` },
+        data: { gymId: gym.id, name: `Team ${i + 1}`, icon: iconForTeamIndex(i) },
       });
       const group = groups[i];
       if (group?.length) {

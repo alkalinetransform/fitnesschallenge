@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireApprovedAdminGym } from "@/lib/session";
 import { splitIntoTeams } from "@/lib/team-shuffle";
+import { iconForTeamIndex } from "@/lib/team-icons";
+
+const MAX_TEAMS = 50;
 
 function assertChallengeActive(gym: { challengeEnded: boolean }) {
   if (gym.challengeEnded) {
@@ -12,13 +15,37 @@ function assertChallengeActive(gym: { challengeEnded: boolean }) {
   return null;
 }
 
+export async function createTeam() {
+  const { gym } = await requireApprovedAdminGym();
+  const locked = assertChallengeActive(gym);
+  if (locked) return locked;
+
+  const existingCount = await prisma.team.count({ where: { gymId: gym.id } });
+  if (existingCount >= MAX_TEAMS) {
+    return { error: `Maximum ${MAX_TEAMS} teams` };
+  }
+
+  await prisma.team.create({
+    data: {
+      gymId: gym.id,
+      name: `Team ${existingCount + 1}`,
+      icon: iconForTeamIndex(existingCount),
+    },
+  });
+
+  revalidatePath("/admin/teams");
+  revalidatePath("/leaderboard");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
 export async function previewTeams(teamCount: number) {
   const { gym } = await requireApprovedAdminGym();
   const locked = assertChallengeActive(gym);
   if (locked) return locked;
 
-  if (!Number.isInteger(teamCount) || teamCount < 1) {
-    return { error: "Enter a valid number of teams" };
+  if (!Number.isInteger(teamCount) || teamCount < 1 || teamCount > MAX_TEAMS) {
+    return { error: `Enter a valid number of teams (1–${MAX_TEAMS})` };
   }
 
   const players = await prisma.user.findMany({
@@ -27,17 +54,15 @@ export async function previewTeams(teamCount: number) {
     orderBy: { name: "asc" },
   });
 
-  if (players.length < 2) {
-    return { error: "Need at least 2 active players to form teams" };
-  }
-  if (teamCount > players.length) {
-    return { error: "Cannot have more teams than players" };
+  if (players.length < 1) {
+    return { error: "Need at least 1 active player to preview teams" };
   }
 
   const groups = splitIntoTeams(players, teamCount);
   return {
     preview: groups.map((group, i) => ({
       name: `Team ${i + 1}`,
+      icon: iconForTeamIndex(i),
       players: group.map((p) => ({ id: p.id, name: p.name })),
     })),
   };
@@ -50,8 +75,8 @@ export async function generateTeams(formData: FormData) {
 
   const teamCount = Number(formData.get("teamCount"));
 
-  if (!Number.isInteger(teamCount) || teamCount < 1) {
-    return { error: "Enter a valid number of teams" };
+  if (!Number.isInteger(teamCount) || teamCount < 1 || teamCount > MAX_TEAMS) {
+    return { error: `Enter a valid number of teams (1–${MAX_TEAMS})` };
   }
 
   const players = await prisma.user.findMany({
@@ -59,11 +84,8 @@ export async function generateTeams(formData: FormData) {
     select: { id: true, name: true },
   });
 
-  if (players.length < 2) {
-    return { error: "Need at least 2 active players to form teams" };
-  }
-  if (teamCount > players.length) {
-    return { error: "Cannot have more teams than players" };
+  if (players.length < 1) {
+    return { error: "Need at least 1 active player to generate teams" };
   }
 
   const groups = splitIntoTeams(players, teamCount);
@@ -73,7 +95,7 @@ export async function generateTeams(formData: FormData) {
 
     for (let i = 0; i < groups.length; i++) {
       const team = await tx.team.create({
-        data: { gymId: gym.id, name: `Team ${i + 1}` },
+        data: { gymId: gym.id, name: `Team ${i + 1}`, icon: iconForTeamIndex(i) },
       });
       const group = groups[i];
       if (group.length > 0) {

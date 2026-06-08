@@ -2,7 +2,13 @@
 
 import { EnvelopedTabs, type EnvelopedTab } from "@/components/enveloped-tabs";
 
-export function PlayerSubNav({ resultsReady }: { resultsReady?: boolean }) {
+export function PlayerSubNav({
+  resultsReady,
+  calendarWeek,
+}: {
+  resultsReady?: boolean;
+  calendarWeek?: number;
+}) {
   const tabs: EnvelopedTab[] = [
     {
       href: "/dashboard",
@@ -24,6 +30,14 @@ export function PlayerSubNav({ resultsReady }: { resultsReady?: boolean }) {
     },
   ];
 
+  const leading =
+    calendarWeek != null ? (
+      <span className="truncate text-center text-[11px] font-bold text-brand-400 sm:text-xs">
+        <span className="sm:hidden">Wk {calendarWeek}</span>
+        <span className="hidden sm:inline">Week {calendarWeek}</span>
+      </span>
+    ) : undefined;
+
   return (
     <div>
       {resultsReady && (
@@ -31,7 +45,7 @@ export function PlayerSubNav({ resultsReady }: { resultsReady?: boolean }) {
           See your results! → Me tab
         </p>
       )}
-      <EnvelopedTabs tabs={tabs} ariaLabel="Player sections" />
+      <EnvelopedTabs tabs={tabs} ariaLabel="Player sections" leading={leading} />
     </div>
   );
 }

@@ -6,11 +6,11 @@ export async function maintainGym(gymId: string) {
   const gym = await prisma.gym.findUnique({ where: { id: gymId } });
   if (!gym || gym.challengeEnded) return gym;
 
-  const computedWeek = computeWeekFromSeason(gym.seasonStartDate);
-  if (computedWeek !== gym.activeWeek) {
+  const calendarWeek = computeWeekFromSeason(gym.seasonStartDate);
+  if (calendarWeek > gym.activeWeek) {
     return prisma.gym.update({
       where: { id: gymId },
-      data: { activeWeek: computedWeek },
+      data: { activeWeek: calendarWeek },
     });
   }
   return gym;
