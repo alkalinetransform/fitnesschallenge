@@ -30,10 +30,17 @@ function loadEnvIfNeeded() {
 const createPrismaClient = () => {
   loadEnvIfNeeded();
   const url = process.env.DATABASE_URL ?? "";
-  const useNeonDriver = url.includes("neon.tech");
+  // Vercel can reach Neon over TCP via the pooler — avoid the WebSocket driver there
+  // (it throws "mask is not a function" without native ws optional deps).
+  // Use the serverless driver only locally when TCP port 5432 is blocked.
+  const useNeonServerless =
+    url.includes("neon.tech") &&
+    process.env.VERCEL !== "1" &&
+    process.env.USE_NEON_SERVERLESS !== "0";
 
-  if (useNeonDriver) {
+  if (useNeonServerless) {
     neonConfig.webSocketConstructor = ws;
+    neonConfig.poolQueryViaFetch = true;
     const adapter = new PrismaNeon({ connectionString: url });
     return new PrismaClient({
       adapter,
