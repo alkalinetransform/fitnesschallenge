@@ -41,9 +41,17 @@ export function AdminBroadcastModal({ players }: { players: PlayerOption[] }) {
 
   if (!open) {
     return (
-      <Button type="button" variant="outline" size="md" onClick={() => setOpen(true)}>
-        Message players
-      </Button>
+      <div className="glass-card flex w-full flex-col gap-4 rounded-2xl border border-white/10 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-lg font-bold text-white">Message players</p>
+          <p className="mt-1 text-sm text-slate-400">
+            Send announcements by email, in-app popup, or both — to everyone or selected players.
+          </p>
+        </div>
+        <Button type="button" size="lg" className="w-full shrink-0 sm:w-auto" onClick={() => setOpen(true)}>
+          Compose message
+        </Button>
+      </div>
     );
   }
 

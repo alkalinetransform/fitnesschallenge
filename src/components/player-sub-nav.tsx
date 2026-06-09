@@ -32,7 +32,7 @@ export function PlayerSubNav({
 
   const leading =
     calendarWeek != null ? (
-      <span className="truncate text-center text-[11px] font-bold text-brand-400 sm:text-xs">
+      <span className="truncate text-center text-xs font-bold text-brand-400 sm:text-sm">
         <span className="sm:hidden">Wk {calendarWeek}</span>
         <span className="hidden sm:inline">Week {calendarWeek}</span>
       </span>

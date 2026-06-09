@@ -55,9 +55,7 @@ export default async function AdminDashboardPage() {
         active={active}
       />
 
-      <div className="flex flex-wrap items-center gap-3">
-        <AdminBroadcastModal players={messagePlayers} />
-      </div>
+      <AdminBroadcastModal players={messagePlayers} />
 
       {active && <AdminCheckInQr checkInUrl={checkInUrl} />}
 

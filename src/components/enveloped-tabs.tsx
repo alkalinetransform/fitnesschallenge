@@ -31,13 +31,13 @@ export function EnvelopedTabs({
       className="border-b border-white/10 bg-slate-950/70 backdrop-blur-md"
       aria-label={ariaLabel}
     >
-      <div className="w-full px-2 py-2 sm:px-4">
+      <div className="w-full px-2 py-3 sm:px-4">
         <div
-          className="grid w-full gap-1 rounded-2xl border border-white/10 bg-slate-900/80 p-1 shadow-inner shadow-black/20"
+          className="grid w-full gap-1.5 rounded-2xl border border-white/10 bg-slate-900/80 p-1.5 shadow-inner shadow-black/20"
           style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
         >
           {leading && (
-            <div className="flex min-w-0 items-center justify-center rounded-xl px-1 py-2 sm:px-2 sm:py-2.5">
+            <div className="flex min-h-[44px] min-w-0 items-center justify-center rounded-xl px-2 py-3 sm:min-h-[48px] sm:px-3">
               {leading}
             </div>
           )}
@@ -46,7 +46,7 @@ export function EnvelopedTabs({
             const content = (
               <span
                 className={cn(
-                  "relative flex h-full min-w-0 items-center justify-center whitespace-nowrap rounded-xl px-1 py-2 text-center text-[11px] font-semibold leading-tight transition-all sm:px-2 sm:py-2.5 sm:text-xs md:text-sm",
+                  "relative flex min-h-[44px] min-w-0 items-center justify-center whitespace-nowrap rounded-xl px-2 py-3 text-center text-xs font-semibold leading-tight transition-all sm:min-h-[48px] sm:px-3 sm:text-sm md:text-base",
                   tab.disabled
                     ? "cursor-not-allowed text-slate-600"
                     : active
