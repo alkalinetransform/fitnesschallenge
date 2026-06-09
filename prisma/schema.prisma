@@ -90,7 +90,7 @@ model Gym {
   messages        BroadcastMessage[]
   archives        CompetitionArchive[]
   endMetricsDrafts PlayerEndMetricsDraft[]
-  checkInSecret   String              @unique @default(cuid())
+  checkInSecret   String              @unique @default(dbgenerated("gen_random_uuid()::text"))
   gymVisits       GymVisit[]
   createdAt       DateTime            @default(now())
 }

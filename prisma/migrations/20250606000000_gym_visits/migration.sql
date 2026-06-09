@@ -1,8 +1,6 @@
-ALTER TABLE "Gym" ADD COLUMN IF NOT EXISTS "checkInSecret" TEXT;
+ALTER TABLE "Gym" ADD COLUMN IF NOT EXISTS "checkInSecret" TEXT NOT NULL DEFAULT gen_random_uuid()::text;
 
-UPDATE "Gym" SET "checkInSecret" = gen_random_uuid()::text WHERE "checkInSecret" IS NULL;
-
-ALTER TABLE "Gym" ALTER COLUMN "checkInSecret" SET NOT NULL;
+UPDATE "Gym" SET "checkInSecret" = gen_random_uuid()::text WHERE "checkInSecret" IS NULL OR "checkInSecret" = '';
 
 CREATE UNIQUE INDEX IF NOT EXISTS "Gym_checkInSecret_key" ON "Gym"("checkInSecret");
 
@@ -19,5 +17,12 @@ CREATE TABLE IF NOT EXISTS "GymVisit" (
 CREATE UNIQUE INDEX IF NOT EXISTS "GymVisit_userId_visitDate_key" ON "GymVisit"("userId", "visitDate");
 CREATE INDEX IF NOT EXISTS "GymVisit_userId_gymId_weekNumber_idx" ON "GymVisit"("userId", "gymId", "weekNumber");
 
-ALTER TABLE "GymVisit" ADD CONSTRAINT "GymVisit_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "GymVisit" ADD CONSTRAINT "GymVisit_gymId_fkey" FOREIGN KEY ("gymId") REFERENCES "Gym"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "GymVisit" ADD CONSTRAINT "GymVisit_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE "GymVisit" ADD CONSTRAINT "GymVisit_gymId_fkey" FOREIGN KEY ("gymId") REFERENCES "Gym"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;

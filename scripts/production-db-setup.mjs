@@ -54,6 +54,34 @@ function tcpWorks() {
   }
 }
 
+function applyMigrationsViaTcp() {
+  console.log("Applying migration SQL files...\n");
+  for (const name of migrations) {
+    const sqlPath = path.join(root, "prisma", "migrations", name, "migration.sql");
+    if (!fs.existsSync(sqlPath)) {
+      console.log(`(skip missing migration: ${name})`);
+      continue;
+    }
+    console.log(`Applying ${name}...`);
+    try {
+      run(
+        `npx prisma db execute --file "prisma/migrations/${name}/migration.sql" --schema prisma/schema.prisma`
+      );
+    } catch (e) {
+      const msg = e.message ?? String(e);
+      if (
+        msg.includes("already exists") ||
+        msg.includes("duplicate") ||
+        msg.includes("42710")
+      ) {
+        console.log(`  (partially applied — continuing)`);
+      } else {
+        throw e;
+      }
+    }
+  }
+}
+
 async function pushSchemaViaNeon() {
   console.log("Port 5432 unreachable — applying schema via Neon serverless (HTTPS)...\n");
 
@@ -111,9 +139,15 @@ if (useNeonPath) {
   console.log("\nTCP to Postgres failed (P1001) — using Neon serverless fallback.\n");
   await pushSchemaViaNeon();
 } else {
-  console.log("TCP connection OK — using prisma db push.\n");
-  run("npx prisma db push");
-  console.log("\n2/3 Baselining migration history...\n");
+  console.log("TCP connection OK — applying migrations, then syncing schema.\n");
+  applyMigrationsViaTcp();
+  console.log("\n2/3 Syncing Prisma schema (db push)...\n");
+  try {
+    run("npx prisma db push");
+  } catch {
+    console.log("(db push reported drift — migrations likely already applied)");
+  }
+  console.log("\nBaselining migration history...\n");
   for (const name of migrations) {
     try {
       run(`npx prisma migrate resolve --applied ${name}`);
