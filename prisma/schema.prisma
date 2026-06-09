@@ -56,6 +56,7 @@ model User {
   messageDismissals       MessageDismissal[]
   broadcastTargets        BroadcastMessageTarget[]
   endMetricsDrafts        PlayerEndMetricsDraft[]
+  gymVisits               GymVisit[]
   createdAt               DateTime  @default(now())
 }
 
@@ -89,6 +90,8 @@ model Gym {
   messages        BroadcastMessage[]
   archives        CompetitionArchive[]
   endMetricsDrafts PlayerEndMetricsDraft[]
+  checkInSecret   String              @unique @default(cuid())
+  gymVisits       GymVisit[]
   createdAt       DateTime            @default(now())
 }
 
@@ -193,4 +196,19 @@ model Completion {
   completedAt DateTime  @default(now())
 
   @@id([userId, challengeId])
+}
+
+/** One gym check-in per player per calendar day (QR scan). */
+model GymVisit {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gymId      String
+  gym        Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  weekNumber Int
+  visitDate  DateTime @db.Date
+  checkedInAt DateTime @default(now())
+
+  @@unique([userId, visitDate])
+  @@index([userId, gymId, weekNumber])
 }

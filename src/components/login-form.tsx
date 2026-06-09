@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 
-export function LoginForm() {
+export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -22,6 +22,7 @@ export function LoginForm() {
       }}
       className="mt-6 space-y-4"
     >
+      {callbackUrl && <input type="hidden" name="callbackUrl" value={callbackUrl} />}
       <div>
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" required autoComplete="email" />

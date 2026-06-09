@@ -2,119 +2,61 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { requireApprovedAdminGym } from "@/lib/session";
+import { requireApprovedAdminGym, requirePlayerGym } from "@/lib/session";
 import { habitLabelsFromCompletions } from "@/lib/player-utils";
 
-export async function saveEndMetricsDraft(formData: FormData) {
-  const { gym } = await requireApprovedAdminGym();
-  const userId = formData.get("userId") as string;
-
-  const player = await prisma.user.findFirst({
-    where: { id: userId, gymId: gym.id, role: "PLAYER" },
-  });
-  if (!player) return { error: "Player not found" };
-
+function parseMetrics(formData: FormData) {
   const num = (key: string) => {
     const v = formData.get(key);
     if (v === null || v === "") return null;
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
   };
-
-  await prisma.playerEndMetricsDraft.upsert({
-    where: { userId_gymId: { userId, gymId: gym.id } },
-    create: {
-      userId,
-      gymId: gym.id,
-      skeletalMuscleMass: num("skeletalMuscleMass"),
-      weightLbs: num("weightLbs"),
-      bodyFatPercent: num("bodyFatPercent"),
-    },
-    update: {
-      skeletalMuscleMass: num("skeletalMuscleMass"),
-      weightLbs: num("weightLbs"),
-      bodyFatPercent: num("bodyFatPercent"),
-    },
-  });
-
-  revalidatePath("/admin");
-  return { success: true };
+  return {
+    skeletalMuscleMass: num("skeletalMuscleMass"),
+    weightLbs: num("weightLbs"),
+    bodyFatPercent: num("bodyFatPercent"),
+  };
 }
 
-export async function sendPlayerEndMetrics(userId: string) {
-  const { gym } = await requireApprovedAdminGym();
-  const draft = await prisma.playerEndMetricsDraft.findUnique({
-    where: { userId_gymId: { userId, gymId: gym.id } },
+export async function submitPlayerEndMetrics(formData: FormData) {
+  const { session, gym } = await requirePlayerGym();
+
+  if (!gym.challengeEnded || gym.endPhase !== "AWAITING_METRICS") {
+    return { error: "End metrics are not open right now." };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { endMetricsSentAt: true },
   });
+  if (user?.endMetricsSentAt) {
+    return { error: "You already submitted your final metrics." };
+  }
+
+  const metrics = parseMetrics(formData);
   if (
-    !draft ||
-    (draft.skeletalMuscleMass == null &&
-      draft.weightLbs == null &&
-      draft.bodyFatPercent == null)
+    metrics.skeletalMuscleMass == null &&
+    metrics.weightLbs == null &&
+    metrics.bodyFatPercent == null
   ) {
     return { error: "Enter at least skeletal muscle mass, weight, or body fat %" };
   }
 
   await prisma.user.update({
-    where: { id: userId },
+    where: { id: session.user.id },
     data: {
-      endSkeletalMuscleMass: draft.skeletalMuscleMass,
-      endWeightLbs: draft.weightLbs,
-      endBodyFatPercent: draft.bodyFatPercent,
+      endSkeletalMuscleMass: metrics.skeletalMuscleMass,
+      endWeightLbs: metrics.weightLbs,
+      endBodyFatPercent: metrics.bodyFatPercent,
       endMetricsSentAt: new Date(),
     },
   });
 
-  revalidatePath("/admin");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/me");
+  revalidatePath("/admin");
   return { success: true };
-}
-
-export async function sendAllPlayerData() {
-  const { gym } = await requireApprovedAdminGym();
-
-  const players = await prisma.user.findMany({
-    where: { gymId: gym.id, role: "PLAYER" },
-    select: { id: true },
-  });
-
-  const drafts = await prisma.playerEndMetricsDraft.findMany({
-    where: { gymId: gym.id },
-  });
-  const draftMap = new Map(drafts.map((d) => [d.userId, d]));
-
-  let sentCount = 0;
-  for (const p of players) {
-    const draft = draftMap.get(p.id);
-    if (!draft) continue;
-    if (
-      draft.skeletalMuscleMass == null &&
-      draft.weightLbs == null &&
-      draft.bodyFatPercent == null
-    ) {
-      continue;
-    }
-    await prisma.user.update({
-      where: { id: p.id },
-      data: {
-        endSkeletalMuscleMass: draft.skeletalMuscleMass,
-        endWeightLbs: draft.weightLbs,
-        endBodyFatPercent: draft.bodyFatPercent,
-        endMetricsSentAt: new Date(),
-      },
-    });
-    sentCount++;
-  }
-
-  if (sentCount === 0) {
-    return { error: "Enter metrics for at least one player before sending all" };
-  }
-
-  revalidatePath("/admin");
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/me");
-  return { success: true, sentCount };
 }
 
 async function buildArchiveSnapshot(gymId: string) {
@@ -143,45 +85,43 @@ async function buildArchiveSnapshot(gymId: string) {
   }));
 }
 
-export async function sendAllEndMetrics() {
+/** Admin archives competition after all players submit their own end metrics. */
+export async function archiveCompetitionResults() {
   const { gym } = await requireApprovedAdminGym();
+
+  if (gym.endPhase !== "AWAITING_METRICS") {
+    return { error: "Competition is not awaiting final metrics." };
+  }
 
   const players = await prisma.user.findMany({
     where: { gymId: gym.id, role: "PLAYER" },
-    select: { id: true },
+    select: {
+      id: true,
+      endMetricsSentAt: true,
+      endSkeletalMuscleMass: true,
+      endWeightLbs: true,
+      endBodyFatPercent: true,
+    },
   });
 
-  const drafts = await prisma.playerEndMetricsDraft.findMany({
-    where: { gymId: gym.id },
-  });
-  const draftMap = new Map(drafts.map((d) => [d.userId, d]));
+  if (players.length === 0) {
+    return { error: "No players to archive." };
+  }
 
   for (const p of players) {
-    const draft = draftMap.get(p.id);
-    if (!draft) return { error: "Complete metrics for every player before archiving" };
+    if (!p.endMetricsSentAt) {
+      return { error: "Wait until every player submits their final metrics on the Me tab." };
+    }
     if (
-      draft.skeletalMuscleMass == null &&
-      draft.weightLbs == null &&
-      draft.bodyFatPercent == null
+      p.endSkeletalMuscleMass == null &&
+      p.endWeightLbs == null &&
+      p.endBodyFatPercent == null
     ) {
-      return { error: "Each player needs skeletal muscle, weight, or body fat %" };
+      return { error: "A player submitted without any metrics — ask them to update on Me tab." };
     }
   }
 
   await prisma.$transaction(async (tx) => {
-    for (const p of players) {
-      const draft = draftMap.get(p.id)!;
-      await tx.user.update({
-        where: { id: p.id },
-        data: {
-          endSkeletalMuscleMass: draft.skeletalMuscleMass,
-          endWeightLbs: draft.weightLbs,
-          endBodyFatPercent: draft.bodyFatPercent,
-          endMetricsSentAt: new Date(),
-        },
-      });
-    }
-
     const snapshot = await buildArchiveSnapshot(gym.id);
     await tx.competitionArchive.create({
       data: {
@@ -202,4 +142,24 @@ export async function sendAllEndMetrics() {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/me");
   return { success: true };
+}
+
+/** @deprecated admin draft flow removed */
+export async function saveEndMetricsDraft() {
+  return { error: "Players enter their own final metrics now." };
+}
+
+/** @deprecated */
+export async function sendPlayerEndMetrics() {
+  return { error: "Players enter their own final metrics now." };
+}
+
+/** @deprecated */
+export async function sendAllPlayerData() {
+  return { error: "Players enter their own final metrics now." };
+}
+
+/** @deprecated use archiveCompetitionResults */
+export async function sendAllEndMetrics() {
+  return archiveCompetitionResults();
 }

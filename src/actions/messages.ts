@@ -43,6 +43,47 @@ export async function sendBroadcastMessage(formData: FormData) {
     }
   }
 
+  const emailPlayers =
+    sendToEmail
+      ? await prisma.user.findMany({
+          where: {
+            gymId: gym.id,
+            role: "PLAYER",
+            isFrozen: false,
+            ...(isBroadcastAll ? {} : { id: { in: recipientIds } }),
+          },
+          select: { email: true },
+        })
+      : [];
+
+  if (sendToEmail && emailPlayers.length > 0) {
+    const subject = `${gym.competitionName} — message from your gym`;
+    let emailsSent = 0;
+    let devLogged = false;
+
+    for (const p of emailPlayers) {
+      const result = await sendBroadcastEmail({
+        to: p.email,
+        subject,
+        body: parsed.data.body,
+      });
+      if (result.sent) {
+        emailsSent++;
+      } else if ("logged" in result && result.logged) {
+        devLogged = true;
+      } else if ("error" in result && result.error) {
+        return { error: result.error };
+      }
+    }
+
+    if (emailsSent === 0 && !devLogged) {
+      return {
+        error:
+          "Email is not configured. Set GMAIL_APP_PASSWORD (Google App Password) on Vercel, or uncheck “Send to email”.",
+      };
+    }
+  }
+
   const message = await prisma.broadcastMessage.create({
     data: {
       gymId: gym.id,
@@ -59,26 +100,6 @@ export async function sendBroadcastMessage(formData: FormData) {
           }),
     },
   });
-
-  if (sendToEmail) {
-    const players = await prisma.user.findMany({
-      where: {
-        gymId: gym.id,
-        role: "PLAYER",
-        isFrozen: false,
-        ...(isBroadcastAll ? {} : { id: { in: recipientIds } }),
-      },
-      select: { email: true, name: true },
-    });
-    const subject = `${gym.competitionName} — message from your gym`;
-    for (const p of players) {
-      await sendBroadcastEmail({
-        to: p.email,
-        subject,
-        body: parsed.data.body,
-      });
-    }
-  }
 
   revalidatePath("/admin");
   return { success: true, messageId: message.id };

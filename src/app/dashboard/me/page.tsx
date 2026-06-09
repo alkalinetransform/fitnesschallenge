@@ -4,7 +4,10 @@ import { habitLabelsFromCompletions } from "@/lib/player-utils";
 import { BodyMetricsDisplay } from "@/components/body-metrics-display";
 import { TransformationWrap } from "@/components/transformation-wrap";
 import { PastWrapViewer } from "@/components/past-wrap-viewer";
+import { PlayerEndMetricsForm } from "@/components/player-end-metrics-form";
+import { StreakBadges } from "@/components/streak-display";
 import { Card, CardTitle } from "@/components/ui/card";
+import { computeStreak } from "@/lib/gym-visits";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +20,12 @@ export default async function MePage() {
       completions: { include: { challenge: { select: { name: true } } } },
     },
   });
+
+  const visitDates = await prisma.gymVisit.findMany({
+    where: { userId: session.user.id },
+    select: { visitDate: true },
+  });
+  const streak = computeStreak(visitDates.map((v) => v.visitDate));
 
   const allArchives = await prisma.competitionArchive.findMany({
     where: { gymId: gym.id },
@@ -39,11 +48,7 @@ export default async function MePage() {
         <p className="text-sm text-slate-400">Your transformation journey</p>
       </div>
 
-      {awaitingResults && (
-        <div className="rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-3 text-sm text-brand-100">
-          The Transformation Challenge ended! Awaiting updated data…
-        </div>
-      )}
+      {awaitingResults && <PlayerEndMetricsForm />}
 
       {showWrap && (
         <TransformationWrap
@@ -63,6 +68,14 @@ export default async function MePage() {
           }}
         />
       )}
+
+      <Card>
+        <CardTitle>Gym streak badges</CardTitle>
+        <p className="mt-1 text-xs text-slate-500">Earn badges by checking in at the gym</p>
+        <div className="mt-4">
+          <StreakBadges streak={streak} />
+        </div>
+      </Card>
 
       <Card>
         <CardTitle>Beginning of transformation</CardTitle>

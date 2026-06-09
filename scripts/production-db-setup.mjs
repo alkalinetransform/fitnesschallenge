@@ -32,6 +32,8 @@ const migrations = [
   "20250522000000_formal_admin",
   "20250603000000_transformation_features",
   "20250604000000_message_targets",
+  "20250605000000_team_icons",
+  "20250606000000_gym_visits",
 ];
 
 function run(cmd, extraEnv = {}) {

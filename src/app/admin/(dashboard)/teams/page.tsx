@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { TeamEditor } from "@/components/team-editor";
 import { TeamGenerator } from "@/components/team-generator";
 import { AddTeamButton } from "@/components/add-team-button";
-import { UnassignedPlayersPanel } from "@/components/unassigned-players-panel";
 import { AdminTabEndedOverlay } from "@/components/admin-tab-ended-overlay";
 
 export default async function AdminTeamsPage() {
@@ -28,12 +27,6 @@ export default async function AdminTeamsPage() {
   const assignedIds = new Set(teams.flatMap((t) => t.members.map((m) => m.userId)));
   const unassigned = allPlayers.filter((p) => !assignedIds.has(p.id));
 
-  const unassignedForPanel = unassigned.map((p) => ({
-    id: p.id,
-    name: p.name,
-    createdAt: p.createdAt,
-  }));
-
   const unassignedEditor = unassigned.map((p) => ({
     id: p.id,
     name: p.name,
@@ -51,26 +44,26 @@ export default async function AdminTeamsPage() {
     <div className="space-y-6 animate-fade-in">
       {ended && <AdminTabEndedOverlay />}
       <div className={ended ? "pointer-events-none space-y-6 opacity-40" : "space-y-6"}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-white">Teams</h1>
-          <p className="text-sm text-slate-400">
-            {teams.length} team{teams.length === 1 ? "" : "s"} · shuffle rosters or add teams anytime
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="font-display text-2xl font-bold text-white">Teams</h1>
+            <p className="text-sm text-slate-400">
+              {teams.length} team{teams.length === 1 ? "" : "s"} · {allPlayers.length} active
+              players
+            </p>
+          </div>
+          <AddTeamButton />
         </div>
-        <AddTeamButton />
-      </div>
 
-      <TeamGenerator playerCount={allPlayers.length} />
-
-      <UnassignedPlayersPanel players={unassignedForPanel} />
-
-      {teams.length > 0 && (
-        <div>
-          <h2 className="mb-3 font-display text-lg font-semibold text-white">Edit teams</h2>
+        {teams.length > 0 && (
           <TeamEditor teams={teamData} unassigned={unassignedEditor} />
-        </div>
-      )}
+        )}
+
+        <TeamGenerator playerCount={allPlayers.length} />
+
+        {teams.length === 0 && unassigned.length > 0 && (
+          <TeamEditor teams={[]} unassigned={unassignedEditor} />
+        )}
       </div>
     </div>
   );

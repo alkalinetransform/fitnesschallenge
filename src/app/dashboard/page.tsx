@@ -6,8 +6,12 @@ import { ChallengeCheckbox } from "@/components/challenge-checkbox";
 import { StatCard } from "@/components/stat-card";
 import { CompetitionStatusBanner } from "@/components/competition-status-banner";
 import { TeamRosterGrid } from "@/components/leaderboard-podium";
+import { GymVisitProgress } from "@/components/gym-visit-progress";
+import { StreakDisplay } from "@/components/streak-display";
 import { cn } from "@/lib/utils";
 import { formatTeamLabel } from "@/lib/team-icons";
+import { computeStreak, GYM_VISIT_CHALLENGE_NAME } from "@/lib/gym-visits";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +24,27 @@ export default async function DashboardPage() {
     select: { endMetricsSentAt: true },
   });
 
+  const weekVisits = await prisma.gymVisit.count({
+    where: {
+      userId: session.user.id,
+      gymId: gym.id,
+      weekNumber: gym.activeWeek,
+    },
+  });
+
+  const allVisitDates = await prisma.gymVisit.findMany({
+    where: { userId: session.user.id },
+    select: { visitDate: true },
+    orderBy: { visitDate: "desc" },
+  });
+  const streak = computeStreak(allVisitDates.map((v) => v.visitDate));
+
   const challenges = await prisma.challenge.findMany({
     where: {
       gymId: gym.id,
       startDate: { lte: now },
       expiresAt: { gt: now },
+      name: { not: GYM_VISIT_CHALLENGE_NAME },
     },
     orderBy: { name: "asc" },
   });
@@ -71,9 +91,20 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {!locked && (
+        <>
+          <StreakDisplay streak={streak} />
+          <GymVisitProgress weekCount={weekVisits} />
+        </>
+      )}
+
       {awaitingResults && (
         <div className="rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-4 text-center text-sm text-brand-100">
-          The Transformation Challenge ended! Awaiting updated data…
+          The Transformation Challenge ended!{" "}
+          <Link href="/dashboard/me" className="font-semibold underline">
+            Enter your final metrics on the Me tab
+          </Link>{" "}
+          to see your results.
         </div>
       )}
 

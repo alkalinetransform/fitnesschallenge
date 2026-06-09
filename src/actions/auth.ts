@@ -74,13 +74,17 @@ export async function registerPlayer(formData: FormData) {
   });
 
   try {
+    await signOut({ redirect: false });
     await signIn("credentials", {
       email,
       password,
       redirectTo: "/dashboard?welcome=1",
     });
-  } catch {
-    return { error: "Account created but sign-in failed" };
+  } catch (e) {
+    if (e instanceof AuthError) {
+      return { error: "Account created but sign-in failed" };
+    }
+    throw e;
   }
 }
 
@@ -146,13 +150,17 @@ export async function registerAdmin(formData: FormData) {
   await sendVerificationEmail(email, token);
 
   try {
+    await signOut({ redirect: false });
     await signIn("credentials", {
       email,
       password,
       redirectTo: "/admin/pending?reason=email",
     });
-  } catch {
-    return { error: "Account created. Check your email to verify, then log in." };
+  } catch (e) {
+    if (e instanceof AuthError) {
+      return { error: "Account created. Check your email to verify, then log in." };
+    }
+    throw e;
   }
 }
 
@@ -222,6 +230,7 @@ export async function resendVerificationEmailForm(): Promise<void> {
 export async function loginUser(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const callbackUrl = (formData.get("callbackUrl") as string | null)?.trim();
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -238,10 +247,12 @@ export async function loginUser(formData: FormData) {
   if (user.isFrozen) return { error: "Your account has been deactivated. Contact your gym admin." };
 
   let redirectTo =
-    user.role === "PLAYER" && !user.welcomeSeenAt
-      ? "/dashboard?welcome=1"
-      : "/dashboard";
-  if (user.role === "ADMIN") {
+    callbackUrl && callbackUrl.startsWith("/")
+      ? callbackUrl
+      : user.role === "PLAYER" && !user.welcomeSeenAt
+        ? "/dashboard?welcome=1"
+        : "/dashboard";
+  if (user.role === "ADMIN" && !callbackUrl) {
     if (!user.emailVerified) {
       redirectTo = "/admin/pending?reason=email";
     } else {

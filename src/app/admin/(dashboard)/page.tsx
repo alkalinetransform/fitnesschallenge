@@ -9,13 +9,16 @@ import { getMaxSelectableWeek } from "@/lib/weeks";
 import { NewCompetitionDialog } from "@/components/new-competition-dialog";
 import { CompetitionInfoBox } from "@/components/competition-info-box";
 import { AdminBroadcastModal } from "@/components/admin-broadcast-modal";
-import { AdminEndMetricsPanel } from "@/components/admin-end-metrics-panel";
-import type { EndMetricsPlayer } from "@/components/admin-end-metrics-panel";
+import { AdminArchivePanel } from "@/components/admin-archive-panel";
+import { AdminCheckInQr } from "@/components/admin-check-in-qr";
 
 export default async function AdminDashboardPage() {
   const { gym } = await requireApprovedAdminGym();
   const active = hasActiveCompetition(gym);
   const maxWeek = getMaxSelectableWeek(gym.seasonStartDate);
+
+  const baseUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const checkInUrl = `${baseUrl}/check-in/${gym.checkInSecret}`;
 
   const playerCount = await prisma.user.count({
     where: { gymId: gym.id, role: "PLAYER", isFrozen: false },
@@ -31,37 +34,16 @@ export default async function AdminDashboardPage() {
   const allPlayers = gym.challengeEnded ? await getPlayerScoresTotal(gym.id) : [];
 
   const awaitingMetrics = gym.endPhase === "AWAITING_METRICS";
-
-  let endMetricsPlayers: EndMetricsPlayer[] = [];
-  let allMetricsComplete = false;
+  let submittedCount = 0;
+  let totalPlayers = 0;
 
   if (awaitingMetrics) {
     const players = await prisma.user.findMany({
       where: { gymId: gym.id, role: "PLAYER" },
-      orderBy: { name: "asc" },
+      select: { endMetricsSentAt: true },
     });
-    const drafts = await prisma.playerEndMetricsDraft.findMany({
-      where: { gymId: gym.id },
-    });
-    const draftMap = new Map(drafts.map((d) => [d.userId, d]));
-
-    endMetricsPlayers = players.map((p) => ({
-      id: p.id,
-      name: p.name,
-      sent: Boolean(p.endMetricsSentAt),
-      draft: {
-        skeletalMuscleMass: draftMap.get(p.id)?.skeletalMuscleMass ?? null,
-        weightLbs: draftMap.get(p.id)?.weightLbs ?? null,
-        bodyFatPercent: draftMap.get(p.id)?.bodyFatPercent ?? null,
-      },
-    }));
-
-    allMetricsComplete = endMetricsPlayers.every(
-      (p) =>
-        p.draft.skeletalMuscleMass != null ||
-        p.draft.weightLbs != null ||
-        p.draft.bodyFatPercent != null
-    );
+    totalPlayers = players.length;
+    submittedCount = players.filter((p) => p.endMetricsSentAt).length;
   }
 
   return (
@@ -76,6 +58,8 @@ export default async function AdminDashboardPage() {
       <div className="flex flex-wrap items-center gap-3">
         <AdminBroadcastModal players={messagePlayers} />
       </div>
+
+      {active && <AdminCheckInQr checkInUrl={checkInUrl} />}
 
       {gym.challengeEnded && (
         <CompetitionStatusBanner
@@ -98,8 +82,8 @@ export default async function AdminDashboardPage() {
 
           <div className="space-y-2 border-t border-white/10 pt-6">
             <p className="text-sm text-slate-500">
-              End the competition to lock all scores. You&apos;ll then enter final body metrics for
-              players.
+              End the competition to lock all scores. Players will enter their own final metrics on
+              the Me tab.
             </p>
             <EndChallengeButton />
           </div>
@@ -107,7 +91,7 @@ export default async function AdminDashboardPage() {
       )}
 
       {awaitingMetrics && (
-        <AdminEndMetricsPanel players={endMetricsPlayers} allComplete={allMetricsComplete} />
+        <AdminArchivePanel submittedCount={submittedCount} totalPlayers={totalPlayers} />
       )}
     </div>
   );

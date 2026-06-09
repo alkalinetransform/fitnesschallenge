@@ -11,6 +11,7 @@ const PUBLIC = [
   "/register",
   "/verify-email",
   "/frozen",
+  "/check-in",
 ];
 
 function authedHome(session: Session) {
