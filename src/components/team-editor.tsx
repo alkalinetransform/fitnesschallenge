@@ -35,39 +35,42 @@ function TeamCardInner({
 
   return (
     <Card className="border-brand-500/15 overflow-hidden">
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1 py-1 text-left transition hover:bg-white/5"
-          aria-expanded={open}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-2 rounded-lg px-1 py-1 text-left transition hover:bg-white/5"
+        aria-expanded={open}
+      >
+        <span
+          className={cn(
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-xs text-slate-300 transition",
+            open && "rotate-180"
+          )}
         >
-          <span
-            className={cn(
-              "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-xs text-slate-300 transition",
-              open && "rotate-180"
-            )}
-          >
-            ▼
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-display font-semibold text-white">{label}</p>
-            <p className="text-xs text-slate-500">
-              {team.members.length} player{team.members.length === 1 ? "" : "s"}
-            </p>
-          </div>
-        </button>
-        <form action={onRename} className="flex flex-wrap items-center gap-2">
-          <input type="hidden" name="teamId" value={team.id} />
-          <Input name="name" defaultValue={team.name} className="max-w-[120px] py-1.5 text-sm" />
-          <Button type="submit" variant="outline" size="sm" loading={pending}>
-            Rename
-          </Button>
-        </form>
-      </div>
+          ▼
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-display font-semibold text-white">{label}</p>
+          <p className="text-xs text-slate-500">
+            {team.members.length} player{team.members.length === 1 ? "" : "s"}
+          </p>
+        </div>
+      </button>
 
       {open && (
-        <div className="mt-3 border-t border-white/5 pt-3 animate-fade-in">
+        <div className="mt-3 space-y-3 border-t border-white/5 pt-3 animate-fade-in">
+          <form action={onRename} className="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="teamId" value={team.id} />
+            <Input
+              name="name"
+              defaultValue={team.name}
+              className="min-w-0 flex-1 py-2 text-sm"
+              aria-label="Team name"
+            />
+            <Button type="submit" variant="outline" size="md" loading={pending}>
+              Rename
+            </Button>
+          </form>
           <TeamRosterPanel teamName={team.name} members={team.members} otherTeams={otherTeams} />
         </div>
       )}

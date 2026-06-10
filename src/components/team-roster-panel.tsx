@@ -27,7 +27,7 @@ export function TeamRosterPanel({
   }, [members, search]);
 
   return (
-    <div className="mt-3">
+    <div>
       <Input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
