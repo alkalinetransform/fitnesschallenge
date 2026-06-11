@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Mascot } from "@/components/mascot";
 
 type CheckInResultData = {
   error?: string;
@@ -20,16 +21,17 @@ export function CheckInResult({ result }: { result: CheckInResultData }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4">
       <div className="glass-card w-full max-w-sm p-8 text-center">
-        <div
-          className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full text-3xl ${
-            isError
-              ? "bg-red-500/20"
-              : isSuccess
-                ? "bg-emerald-500/20"
-                : "bg-brand-500/20"
-          }`}
-        >
-          {isError ? "✕" : isSuccess ? "✓" : "🏋️"}
+        <div className="mx-auto mb-4 flex justify-center">
+          {isError ? (
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/20 text-3xl">
+              ✕
+            </div>
+          ) : (
+            <Mascot
+              size={120}
+              animation={result.pointsAwarded ? "celebrate" : isSuccess ? "wave" : "bounce"}
+            />
+          )}
         </div>
         <h1 className="font-display text-xl font-bold text-white">
           {isError ? "Check-in failed" : result.alreadyToday ? "Already checked in" : "Checked in!"}

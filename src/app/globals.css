@@ -113,10 +113,109 @@ body {
   animation-delay: 0.3s;
 }
 
+@keyframes mascot-bounce {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  40% {
+    transform: translateY(-10px) rotate(-2deg);
+  }
+  70% {
+    transform: translateY(-4px) rotate(2deg);
+  }
+}
+
+@keyframes mascot-wave {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  15% {
+    transform: rotate(-6deg) scale(1.02);
+  }
+  30% {
+    transform: rotate(8deg) scale(1.04);
+  }
+  45% {
+    transform: rotate(-5deg) scale(1.02);
+  }
+  60% {
+    transform: rotate(6deg) scale(1.03);
+  }
+}
+
+@keyframes mascot-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes mascot-celebrate {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.08) rotate(-4deg);
+  }
+  50% {
+    transform: scale(1.12) rotate(4deg);
+  }
+  75% {
+    transform: scale(1.06) rotate(-2deg);
+  }
+}
+
+@keyframes mascot-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-4deg);
+  }
+  75% {
+    transform: rotate(4deg);
+  }
+}
+
+.animate-mascot-bounce {
+  animation: mascot-bounce 2.2s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.animate-mascot-wave {
+  animation: mascot-wave 2.5s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.animate-mascot-float {
+  animation: mascot-float 3s ease-in-out infinite;
+}
+
+.animate-mascot-celebrate {
+  animation: mascot-celebrate 1.8s ease-in-out infinite;
+}
+
+.animate-mascot-wiggle {
+  animation: mascot-wiggle 2s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
   .animate-fade-in,
-  .animate-scale-in {
+  .animate-scale-in,
+  .animate-mascot-bounce,
+  .animate-mascot-wave,
+  .animate-mascot-float,
+  .animate-mascot-celebrate,
+  .animate-mascot-wiggle {
     animation: none;
     opacity: 1;
     transform: none;

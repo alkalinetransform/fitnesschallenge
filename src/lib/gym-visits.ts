@@ -10,12 +10,12 @@ export const STREAK_BADGES = [
 ] as const;
 
 export const STREAK_MESSAGES = [
-  { min: 30, text: "Legend status! You're unstoppable." },
-  { min: 14, text: "Two weeks strong — your future self thanks you." },
-  { min: 7, text: "A full week! Consistency is your superpower." },
-  { min: 3, text: "You're building momentum — keep showing up!" },
-  { min: 1, text: "Great start! Come back tomorrow to grow your streak." },
-  { min: 0, text: "Scan the gym QR code to start your streak today!" },
+  { min: 30, text: "Legend status! Even my sunglasses can't hide how proud I am." },
+  { min: 14, text: "Two weeks strong — your future self is doing a happy dance." },
+  { min: 7, text: "A full week! That's main-character energy right there." },
+  { min: 3, text: "You're on a roll — keep squeezing the day!" },
+  { min: 1, text: "Great start! I'll save you a spot at the gym tomorrow." },
+  { min: 0, text: "Scan the gym QR and let's get this streak started — juice's on me!" },
 ] as const;
 
 export function startOfUtcDay(d = new Date()): Date {

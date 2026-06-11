@@ -70,8 +70,8 @@ export default async function MePage() {
       )}
 
       <Card>
-        <CardTitle>Gym streak badges</CardTitle>
-        <p className="mt-1 text-xs text-slate-500">Earn badges by checking in at the gym</p>
+        <CardTitle>Squeeze&apos;s badge board</CardTitle>
+        <p className="mt-1 text-xs text-slate-500">Check in at the gym to earn streak badges</p>
         <div className="mt-4">
           <StreakBadges streak={streak} />
         </div>

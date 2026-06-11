@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Mascot } from "@/components/mascot";
 
 const steps = [
   {
@@ -25,23 +26,28 @@ const adminFeatures = [
 export default function HomePage() {
   return (
     <main className="relative min-h-screen overflow-hidden">
-      <div className="mx-auto max-w-4xl px-4 pb-24 pt-16 md:pt-24">
+      <div className="mx-auto max-w-4xl px-4 pb-24 pt-12 md:pt-20">
         <section className="text-center">
-          <p className="animate-fade-in-up mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-brand-400">
+          <div className="animate-fade-in-up mx-auto mb-6 flex justify-center">
+            <Mascot size={200} animation="wave" priority />
+          </div>
+
+          <p className="animate-fade-in-up stagger-1 mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-brand-400">
             Squeeze the day
           </p>
 
-          <h1 className="animate-fade-in-up stagger-1 font-display text-5xl font-extrabold leading-tight text-white md:text-6xl">
+          <h1 className="animate-fade-in-up stagger-2 font-display text-5xl font-extrabold leading-tight text-white md:text-6xl">
             Team fitness
             <br />
             <span className="gradient-text">made simple</span>
           </h1>
 
-          <p className="animate-fade-in-up stagger-2 mx-auto mt-5 max-w-lg text-lg text-slate-400">
-            Competitions, weekly challenges, team standings, and one leaderboard — built for gyms that want members moving.
+          <p className="animate-fade-in-up stagger-3 mx-auto mt-5 max-w-lg text-lg text-slate-400">
+            Meet Squeeze — your gym buddy for competitions, weekly challenges, team standings, and one
+            leaderboard built for members who show up.
           </p>
 
-          <div className="animate-fade-in-up stagger-3 mt-10 flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:flex-wrap">
+          <div className="animate-fade-in-up stagger-4 mt-10 flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:flex-wrap">
             <Link href="/register" className="sm:flex-1 sm:min-w-[200px]">
               <Button size="lg" className="w-full">
                 Join as player
@@ -55,7 +61,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="animate-fade-in-up stagger-4 mt-20">
+        <section className="animate-fade-in-up stagger-5 mt-20">
           <h2 className="font-display text-2xl font-bold text-white md:text-3xl">
             How it works
           </h2>
@@ -79,19 +85,24 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="animate-fade-in-up stagger-5 mt-16 glass-card border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent p-8">
-          <h2 className="font-display text-xl font-bold text-white">For gym staff</h2>
-          <p className="mt-2 text-slate-400">
-            Admins log in to manage the active competition, challenges, teams, and players.
-          </p>
-          <ul className="mt-4 space-y-2 text-sm text-slate-300">
-            {adminFeatures.map((item) => (
-              <li key={item} className="flex gap-2">
-                <span className="text-emerald-400">✓</span>
-                {item}
-              </li>
-            ))}
-          </ul>
+        <section className="animate-fade-in-up stagger-6 mt-16 glass-card border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent p-8">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+            <Mascot size={100} animation="bounce" className="shrink-0" />
+            <div className="min-w-0 text-center sm:text-left">
+              <h2 className="font-display text-xl font-bold text-white">For gym staff</h2>
+              <p className="mt-2 text-slate-400">
+                Admins log in to manage the active competition, challenges, teams, and players.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-slate-300">
+                {adminFeatures.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="text-emerald-400">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </section>
       </div>
     </main>

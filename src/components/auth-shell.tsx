@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { Mascot } from "@/components/mascot";
 
 export function AuthShell({
   title,
@@ -12,6 +13,7 @@ export function AuthShell({
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <div className="mb-8 text-center animate-fade-in-up">
+        <Mascot size={100} animation="wave" className="mx-auto mb-4" />
         <p className="font-display text-sm font-semibold uppercase tracking-widest text-brand-400">
           Squeeze the day
         </p>
