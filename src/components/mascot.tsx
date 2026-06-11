@@ -39,7 +39,7 @@ export function Mascot({
         height={size}
         priority={priority}
         className={cn(
-          "h-auto w-full object-contain drop-shadow-[0_8px_24px_rgba(249,115,22,0.35)]",
+          "h-auto w-full object-contain mix-blend-screen drop-shadow-[0_6px_20px_rgba(249,115,22,0.45)]",
           animationClass[animation]
         )}
       />
