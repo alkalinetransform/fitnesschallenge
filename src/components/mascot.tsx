@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { SITE_TAGLINE } from "@/lib/site-brand";
 import { cn } from "@/lib/utils";
 
 export const MASCOT_SRC = "/mascot.png";
@@ -53,11 +54,11 @@ export function MascotLogo({ className }: { className?: string }) {
       <Mascot size={40} animation="wiggle" className="!h-10 !w-10" />
       <span className="min-w-0">
         <span className="font-display text-lg font-bold tracking-tight">
-          <span className="gradient-text">Fit</span>
-          <span className="text-white">Challenge</span>
+          <span className="gradient-text">Alkaline</span>
+          <span className="text-white">Fitness</span>
         </span>
         <span className="block text-[10px] font-medium uppercase tracking-widest text-brand-400/80">
-          Squeeze the day
+          {SITE_TAGLINE}
         </span>
       </span>
     </span>

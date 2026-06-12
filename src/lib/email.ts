@@ -70,7 +70,7 @@ export async function sendBroadcastEmail({
       <h2 style="color:#0f172a;margin:8px 0 16px;">Message from your gym</h2>
       <div style="color:#334155;line-height:1.6;white-space:pre-wrap;">${escapeHtml(body)}</div>
       <p style="margin-top:24px;">
-        <a href="${dashboardUrl}" style="background:#f97316;color:white;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Open FitChallenge</a>
+        <a href="${dashboardUrl}" style="background:#f97316;color:white;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Open AlkalineFitness</a>
       </p>
       <p style="color:#94a3b8;font-size:12px;margin-top:24px;">Sent from ${ADMIN_FROM_EMAIL}</p>
     </div>

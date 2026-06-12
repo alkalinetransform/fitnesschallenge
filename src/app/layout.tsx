@@ -15,7 +15,7 @@ const body = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "FitChallenge",
+  title: "AlkalineFitness",
   description: "Gym fitness challenge tracker with teams and leaderboards",
 };
 

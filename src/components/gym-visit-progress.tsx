@@ -23,7 +23,9 @@ export function GymVisitProgress({
               <p className="text-xs font-semibold uppercase tracking-wide text-brand-400">
                 Gym visits this week
               </p>
-              <p className="mt-0.5 text-sm text-slate-400">Scan the QR code at the gym to check in</p>
+              <p className="mt-0.5 text-sm text-slate-400">
+                At the gym, open your phone&apos;s <strong className="text-slate-300">Camera app</strong> and scan the QR code to check in
+              </p>
             </div>
             <span className="font-display text-2xl font-bold text-white">
               {weekCount}
