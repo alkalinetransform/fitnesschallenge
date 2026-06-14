@@ -6,6 +6,7 @@ import { TransformationWrap } from "@/components/transformation-wrap";
 import { PastWrapViewer } from "@/components/past-wrap-viewer";
 import { PlayerEndMetricsForm } from "@/components/player-end-metrics-form";
 import { StreakBadges } from "@/components/streak-display";
+import { ChangePasswordForm } from "@/components/change-password-form";
 import { Card, CardTitle } from "@/components/ui/card";
 import { computeStreak } from "@/lib/gym-visits";
 
@@ -139,6 +140,17 @@ export default async function MePage() {
           }))} />
         </div>
       )}
+
+      <Card>
+        <CardTitle>Account</CardTitle>
+        <p className="mt-1 text-xs text-slate-500">
+          Update your password while logged in, or use forgot password on the login page if you
+          can&apos;t sign in.
+        </p>
+        <div className="mt-4">
+          <ChangePasswordForm />
+        </div>
+      </Card>
     </div>
   );
 }

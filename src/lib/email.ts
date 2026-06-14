@@ -116,3 +116,58 @@ function escapeHtml(text: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+
+export async function sendPasswordResetEmail(
+  email: string,
+  token: string
+): Promise<EmailSendResult & { url: string }> {
+  const base = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const url = `${base}/reset-password?token=${token}`;
+  const transport = createMailTransport();
+  const from = `Alkaline Fitness <${ADMIN_FROM_EMAIL}>`;
+
+  const html = `
+    <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px;">
+      <p style="color:#f97316;font-weight:700;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;">Squeeze the day</p>
+      <h2 style="color:#0f172a;margin:8px 0 16px;">Reset your password</h2>
+      <p style="color:#334155;line-height:1.6;">We received a request to change the password for your AlkalineFitness account. Click the button below to choose a new password. This link expires in one hour.</p>
+      <p style="margin-top:24px;">
+        <a href="${url}" style="background:#f97316;color:white;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Reset password</a>
+      </p>
+      <p style="color:#64748b;font-size:13px;margin-top:24px;line-height:1.5;">If you did not request this, you can ignore this email. Your password will stay the same.</p>
+      <p style="color:#94a3b8;font-size:12px;margin-top:24px;">Sent from ${ADMIN_FROM_EMAIL}</p>
+    </div>
+  `;
+
+  console.log("\n--- Password reset ---");
+  console.log(`To: ${email}`);
+  console.log(`Link: ${url}\n`);
+
+  if (!transport) {
+    return { sent: false, logged: true, url };
+  }
+
+  try {
+    await transport.sendMail({
+      from,
+      to: email,
+      replyTo: ADMIN_FROM_EMAIL,
+      subject: "Reset your AlkalineFitness password",
+      text: `Reset your password: ${url}\n\nThis link expires in one hour. If you did not request this, ignore this email.`,
+      html,
+    });
+    return { sent: true, url };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Email delivery failed";
+    console.error("Password reset email error:", msg);
+    if (msg.includes("535") || msg.includes("BadCredentials")) {
+      return {
+        sent: false,
+        error:
+          "Gmail rejected the login. Use a Google App Password (not your regular password) for GMAIL_APP_PASSWORD, with 2-Step Verification enabled.",
+        url,
+      };
+    }
+    return { sent: false, error: msg, url };
+  }
+}

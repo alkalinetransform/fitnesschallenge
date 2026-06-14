@@ -36,6 +36,8 @@ model User {
   emailVerified           Boolean   @default(false)
   emailVerifyToken        String?   @unique
   emailVerifyExpires      DateTime?
+  passwordResetToken      String?   @unique
+  passwordResetExpires    DateTime?
   isFrozen                Boolean   @default(false)
   welcomeSeenAt           DateTime?
   profileSetupComplete    Boolean   @default(false)
