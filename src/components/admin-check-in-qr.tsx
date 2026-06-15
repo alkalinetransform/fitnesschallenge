@@ -1,13 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { SITE_NAME } from "@/lib/site-brand";
 
 export function AdminCheckInQr({ checkInUrl }: { checkInUrl: string }) {
   const [copied, setCopied] = useState(false);
-  const qrImage = `https://api.qrserver.com/v1/create-qr-code/?size=400&data=${encodeURIComponent(checkInUrl)}`;
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    QRCode.toDataURL(checkInUrl, {
+      width: 400,
+      margin: 2,
+      errorCorrectionLevel: "M",
+    })
+      .then((url) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [checkInUrl]);
 
   async function copyLink() {
     await navigator.clipboard.writeText(checkInUrl);
@@ -16,6 +35,11 @@ export function AdminCheckInQr({ checkInUrl }: { checkInUrl: string }) {
   }
 
   function handlePrint() {
+    if (!qrDataUrl) {
+      alert("QR code is still loading. Try again in a moment.");
+      return;
+    }
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,7 +57,7 @@ export function AdminCheckInQr({ checkInUrl }: { checkInUrl: string }) {
 <body>
   <h1>Gym check-in</h1>
   <p><strong>Open your phone&apos;s Camera app</strong> and point it at this QR code to check in on ${SITE_NAME}.</p>
-  <img src="${qrImage}" alt="Gym check-in QR code" width="280" height="280" />
+  <img src="${qrDataUrl}" alt="Gym check-in QR code" width="280" height="280" />
   <p>3 visits per week earns bonus points.</p>
   <p class="url">${checkInUrl}</p>
 </body>
@@ -67,13 +91,10 @@ export function AdminCheckInQr({ checkInUrl }: { checkInUrl: string }) {
       setTimeout(cleanup, 60_000);
     };
 
-    const img = doc.querySelector("img");
-    if (img instanceof HTMLImageElement && !img.complete) {
-      img.onload = triggerPrint;
-      img.onerror = triggerPrint;
-    } else {
-      triggerPrint();
-    }
+    // Data URL is inline — available immediately; brief delay lets layout settle.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(triggerPrint);
+    });
   }
 
   return (
@@ -83,14 +104,23 @@ export function AdminCheckInQr({ checkInUrl }: { checkInUrl: string }) {
         Print this at the front desk. Players use their phone&apos;s <strong className="text-slate-300">native Camera app</strong> to scan the QR at the gym and check in (3×/week for bonus points).
       </p>
       <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={qrImage}
-          alt="Gym check-in QR code"
-          width={200}
-          height={200}
-          className="rounded-xl border border-white/10 bg-white p-2"
-        />
+        {qrDataUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={qrDataUrl}
+            alt="Gym check-in QR code"
+            width={200}
+            height={200}
+            className="rounded-xl border border-white/10 bg-white p-2"
+          />
+        ) : (
+          <div
+            className="flex h-[200px] w-[200px] items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xs text-slate-500"
+            aria-hidden
+          >
+            Loading QR…
+          </div>
+        )}
         <div className="min-w-0 flex-1 space-y-3">
           <p className="text-sm text-slate-400">
             Players: open <strong className="text-slate-200">Camera</strong> → scan → log in if prompted → check-in confirmed.
@@ -100,7 +130,7 @@ export function AdminCheckInQr({ checkInUrl }: { checkInUrl: string }) {
             <Button type="button" variant="outline" size="md" onClick={copyLink}>
               {copied ? "Copied!" : "Copy link"}
             </Button>
-            <Button type="button" size="md" onClick={handlePrint}>
+            <Button type="button" size="md" onClick={handlePrint} disabled={!qrDataUrl}>
               Print QR code
             </Button>
           </div>
