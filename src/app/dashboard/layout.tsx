@@ -17,6 +17,7 @@ export default async function DashboardLayout({
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: session.user.id },
     select: {
+      createdAt: true,
       welcomeSeenAt: true,
       profileSetupComplete: true,
       endMetricsSentAt: true,
@@ -28,6 +29,7 @@ export default async function DashboardLayout({
     where: {
       gymId: session.user.gymId!,
       sendToInApp: true,
+      createdAt: { gt: user.createdAt },
       dismissals: { none: { userId: session.user.id } },
       OR: [
         { isBroadcastAll: true },
