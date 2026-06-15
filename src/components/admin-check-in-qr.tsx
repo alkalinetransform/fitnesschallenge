@@ -16,13 +16,7 @@ export function AdminCheckInQr({ checkInUrl }: { checkInUrl: string }) {
   }
 
   function handlePrint() {
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=640,height=720");
-    if (!printWindow) {
-      alert("Allow pop-ups to print the QR code.");
-      return;
-    }
-
-    printWindow.document.write(`<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -42,10 +36,44 @@ export function AdminCheckInQr({ checkInUrl }: { checkInUrl: string }) {
   <img src="${qrImage}" alt="Gym check-in QR code" width="280" height="280" />
   <p>3 visits per week earns bonus points.</p>
   <p class="url">${checkInUrl}</p>
-  <script>window.onload = function() { window.print(); }<\/script>
 </body>
-</html>`);
-    printWindow.document.close();
+</html>`;
+
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.style.cssText = "position:fixed;width:0;height:0;border:0;visibility:hidden";
+    document.body.appendChild(iframe);
+
+    const win = iframe.contentWindow;
+    const doc = iframe.contentDocument ?? win?.document;
+    if (!win || !doc) {
+      document.body.removeChild(iframe);
+      alert("Could not open print preview.");
+      return;
+    }
+
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    const cleanup = () => {
+      if (iframe.parentNode) document.body.removeChild(iframe);
+    };
+
+    const triggerPrint = () => {
+      win.focus();
+      win.print();
+      win.addEventListener("afterprint", cleanup, { once: true });
+      setTimeout(cleanup, 60_000);
+    };
+
+    const img = doc.querySelector("img");
+    if (img instanceof HTMLImageElement && !img.complete) {
+      img.onload = triggerPrint;
+      img.onerror = triggerPrint;
+    } else {
+      triggerPrint();
+    }
   }
 
   return (
