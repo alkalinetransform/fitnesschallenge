@@ -14,7 +14,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:production-setup": "node scripts/production-db-setup.mjs",
-    "db:check": "node scripts/db-check.mjs"
+    "db:check": "node scripts/db-check.mjs",
+    "db:clear-messages": "node scripts/clear-broadcast-messages.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

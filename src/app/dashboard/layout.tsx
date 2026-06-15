@@ -45,7 +45,7 @@ export default async function DashboardLayout({
     : getMaxSelectableWeek(gym.seasonStartDate);
 
   const showWelcome = !user.welcomeSeenAt;
-  const showProfileSetup = !showWelcome && !user.profileSetupComplete;
+  const showProfileSetup = !user.profileSetupComplete;
   const resultsReady = Boolean(user.endMetricsSentAt && !user.resultsWrapSeenAt);
 
   return (
