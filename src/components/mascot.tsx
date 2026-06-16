@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { SITE_TAGLINE } from "@/lib/site-brand";
 import { cn } from "@/lib/utils";
+import mascotImage from "@/assets/mascot.png";
 
-export const MASCOT_SRC = "/mascot.png";
+export const MASCOT_SRC = mascotImage.src;
 
 export type MascotAnimation = "none" | "bounce" | "wave" | "float" | "celebrate" | "wiggle";
 
@@ -34,8 +34,6 @@ export function Mascot({
   priority?: boolean;
   alt?: string;
 }) {
-  const [useFallback, setUseFallback] = useState(false);
-
   return (
     <div
       className={cn(
@@ -45,30 +43,16 @@ export function Mascot({
       )}
       style={{ width: size, height: size }}
     >
-      {/* Animation runs on the wrapper; blend mode stays on the image only. */}
+      {/* Animation on wrapper only — blend mode on image avoids render glitches. */}
       <div className="relative h-full w-full [isolation:isolate]">
-        {useFallback ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={MASCOT_SRC}
-            alt={alt}
-            width={size}
-            height={size}
-            decoding="async"
-            className={cn("h-full w-full", imageClassName)}
-          />
-        ) : (
-          <Image
-            src={MASCOT_SRC}
-            alt={alt}
-            fill
-            sizes={`${size}px`}
-            priority={priority}
-            unoptimized
-            className={imageClassName}
-            onError={() => setUseFallback(true)}
-          />
-        )}
+        <Image
+          src={mascotImage}
+          alt={alt}
+          fill
+          sizes={`${size}px`}
+          priority={priority}
+          className={imageClassName}
+        />
       </div>
     </div>
   );
