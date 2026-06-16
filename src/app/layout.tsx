@@ -32,6 +32,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
+      <head>
+        <link rel="preload" href="/mascot.png" as="image" type="image/png" />
+      </head>
       <body className="font-sans" suppressHydrationWarning>
         {children}
       </body>
